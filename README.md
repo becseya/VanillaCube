@@ -22,5 +22,4 @@ ST-Link Programmer:
 VanillaCube:
 - Create a new git repo for your project
 - Add **VanillaCube** as a submodule by: `git submodule add https://github.com/becseya/VanillaCube`
-- Run `VanillaCube/install.sh`
-- Copy a previously generated `*.ioc` file to `./generated/my-project.ioc`
+- Run `VanillaCube/new-project.sh`

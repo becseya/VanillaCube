@@ -1,25 +1,10 @@
 #!/bin/bash
 
-function fatal_error()
-{
-    echo "$1"
-    exit 1
-}
-
-test -z "$PATH_CUBE_MX" &&
-{
-    PATH_CUBE_MX="$HOME/.bin/STM32CubeMX"
-}
-
-test -z "$PATH_CUBE_PROG" &&
-{
-    PATH_CUBE_PROG="$HOME/.bin/STM32_Programmer_CLI"
-}
-
 R=`pwd`
 VCUBE_DIR=$(dirname `realpath $0`)
+source "$VCUBE_DIR/env.sh"
 
-# TODO: test env paths
+# ---------------------------------------------------------------------------------------------------------------------
 
 # install folder
 VC_INSTALL="$R/build/vcube-install"

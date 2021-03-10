@@ -7,13 +7,13 @@ MK_ENV        = ${DIR_OUTPUT}/vcube-install/env.mk
 PROJECT_FILE  = $(shell find ${DIR_GENERATED} -name '*.ioc' 2>/dev/null)
 
 ifeq (,$(wildcard ${MK_ENV}))
-$(error Environmet is not set. Run 'install.sh')
+$(error Environmet is not set. Run 'VanillaCube/install.sh')
 endif
 
 include ${MK_ENV}
 
 ifeq (,$(wildcard ${PROJECT_FILE}))
-$(error Project file is missing. Run 'make new-project')
+$(error Project file is missing. Run 'VanillaCube/new-project.sh')
 endif
 
 TARGET = $(shell cat ${PROJECT_FILE} | grep -Po '(?<=ProjectManager.ProjectName=)[A-Za-z_.\-]+')

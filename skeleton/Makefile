@@ -49,10 +49,10 @@ ${OUT_GENERATED}: ${PROJECT_FILE} ${OUT_GENERATOR_SCRIPT} Makefile ${DIR_INJECTI
 # generate
 	${PATH_CUBE_MX} -q ${R}/${OUT_GENERATOR_SCRIPT}
 # inject main
-	sed -i '/USER CODE BEGIN EFP/a\void vcube_init();' ${DIR_GENERATED}/Inc/main.h
-	sed -i '/USER CODE BEGIN EFP/a\void vcube_loop();' ${DIR_GENERATED}/Inc/main.h
-	sed -i '/USER CODE BEGIN WHILE/a\  vcube_init();'  ${DIR_GENERATED}/Src/main.c
-	sed -i '/USER CODE BEGIN 3/a\    vcube_loop();'    ${DIR_GENERATED}/Src/main.c
+	sed -i '/USER CODE END EFP/a\void vcube_init();' ${DIR_GENERATED}/Inc/main.h
+	sed -i '/USER CODE END EFP/a\void vcube_loop();' ${DIR_GENERATED}/Inc/main.h
+	sed -i '/USER CODE END 2/a\  vcube_init();'        ${DIR_GENERATED}/Src/main.c
+	sed -i '/USER CODE END WHILE/a\    vcube_loop();'  ${DIR_GENERATED}/Src/main.c
 # inject makefile
 	sed -i '/# paths/,/# source/c\___PATHS___'                                     ${DIR_GENERATED}/Makefile
 	sed -i '/# binaries/,/# CFLAGS/c\___BIN_AND_CPP_SOURCES___'                    ${DIR_GENERATED}/Makefile

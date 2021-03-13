@@ -6,14 +6,13 @@ source "$VCUBE_DIR/env.sh"
 
 # ---------------------------------------------------------------------------------------------------------------------
 
-function process_xml
+function add_target()
 {
-    local XML_FILE="$1"
+    local TARGET="$1"
+    local PACKAGE="$2"
 
-    local TARGET=`basename "$XML_FILE" .xml`
-    local PACKAGE=`cat "$XML_FILE" | grep -Po '(?<=Package=")[A-Z]+' | tr '[:upper:]' '[:lower:]'`
-
-    local TARGET_NAME=`echo "${TARGET:5}" | tr '-' '.' | tr -d '),' | tr '(' '-' | tr '[:upper:]' '[:lower:]'`
+    # remove 'STR32' prefix and make lowercase
+    local TARGET_NAME=`echo "${TARGET:5}" | tr '[:upper:]' '[:lower:]'`
 
     # try to shorten name
     local FILE_NAME="${TARGET_NAME::-2}_$PACKAGE"
@@ -21,6 +20,37 @@ function process_xml
         FILE_NAME="${TARGET_NAME}_$PACKAGE"
 
     echo "$TARGET" > "$DIR_VC_TARGETS/$FILE_NAME"
+}
+
+function explode_variants()
+{
+    local TARGET="$1"
+    local PACKAGE="$2"
+
+    # prepare template and variant list
+    local NAME_TEMPLATE=`echo "$TARGET" | sed -e 's+[(][^)]*[)]+@+'`
+    local VARIANTS=`echo "$TARGET" | grep -Po '\([^\)]+\)' | tr -d '(),'`
+    VARIANTS="${VARIANTS//-}"
+
+    # make variants
+    for (( i=0; i<${#VARIANTS}; i++ )); do
+        TARGET=`echo "$NAME_TEMPLATE" | sed -e "s+@+${VARIANTS:$i:1}+"`
+        add_target "$TARGET" "$PACKAGE"
+    done
+}
+
+function process_xml
+{
+    local XML_FILE="$1"
+
+    local TARGET=`basename "$XML_FILE" .xml`
+    local PACKAGE=`cat "$XML_FILE" | grep -Po '(?<=Package=")[A-Z]+' | tr '[:upper:]' '[:lower:]'`
+
+    if echo "$TARGET" | grep '(' > /dev/null; then
+        explode_variants "$TARGET" "$PACKAGE"
+    else
+        add_target "$TARGET" "$PACKAGE"
+    fi
 }
 
 # ---------------------------------------------------------------------------------------------------------------------

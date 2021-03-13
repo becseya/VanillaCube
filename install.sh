@@ -15,9 +15,9 @@ function add_target()
     local TARGET_NAME=`echo "${TARGET:5}" | tr '[:upper:]' '[:lower:]'`
 
     # try to shorten name
-    local FILE_NAME="${TARGET_NAME::-2}_$PACKAGE"
+    local FILE_NAME="${TARGET_NAME::-2}-$PACKAGE"
     test -f "$DIR_VC_TARGETS/$FILE_NAME" &&
-        FILE_NAME="${TARGET_NAME}_$PACKAGE"
+        FILE_NAME="${TARGET_NAME}-$PACKAGE"
 
     echo "$TARGET" > "$DIR_VC_TARGETS/$FILE_NAME"
 }

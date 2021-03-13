@@ -6,6 +6,24 @@ source "$VCUBE_DIR/env.sh"
 
 # ---------------------------------------------------------------------------------------------------------------------
 
+function process_xml
+{
+    local XML_FILE="$1"
+
+    local MX_TAG=`basename "$XML_FILE" .xml`
+    local MX_PACK=`cat "$XML_FILE" | grep -Po '(?<=Package=")[A-Z]+' | tr '[:upper:]' '[:lower:]'`
+
+    local MX_TAG_SHORT=`echo "${MX_TAG:5}" | tr '-' '.' | tr -d '),' | tr '(' '-' | tr '[:upper:]' '[:lower:]'`
+
+    local TARGET="${MX_TAG_SHORT::-2}_$MX_PACK"
+    test -f "$DIR_VC_TARGETS/$TARGET" &&
+        TARGET="${MX_TAG_SHORT}_$MX_PACK"
+
+    echo "$MX_TAG" > "$DIR_VC_TARGETS/$TARGET"
+}
+
+# ---------------------------------------------------------------------------------------------------------------------
+
 # install folder
 DIR_OUTPUT="$R/build"
 VC_INSTALL="$DIR_OUTPUT/vcube-install"
@@ -29,16 +47,7 @@ DIR_VC_TARGETS="$VC_INSTALL/targets"
     mkdir -p "$DIR_VC_TARGETS"
 
     for f in $PATH_CUBE_MX_FOLDER/db/mcu/STM32*.xml; do
-        MX_TAG=`basename "$f" .xml`
-        MX_TAG_SHORT=`echo "${MX_TAG:5}" | tr '-' '.' | tr -d '),' | tr '(' '-' | tr '[:upper:]' '[:lower:]'`
-        MX_PACK=`cat "$f" | grep -Po '(?<=Package=")[A-Z]+' | tr '[:upper:]' '[:lower:]'`
-
-        TARGET="${MX_TAG_SHORT::-2}_$MX_PACK"
-
-        test -f "$DIR_VC_TARGETS/$TARGET" &&
-            TARGET="${MX_TAG_SHORT}_$MX_PACK"
-
-        echo "$MX_TAG" > "$DIR_VC_TARGETS/$TARGET"
+        process_xml "$f"
     done
 }
 

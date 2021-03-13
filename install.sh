@@ -10,16 +10,17 @@ function process_xml
 {
     local XML_FILE="$1"
 
-    local MX_TAG=`basename "$XML_FILE" .xml`
-    local MX_PACK=`cat "$XML_FILE" | grep -Po '(?<=Package=")[A-Z]+' | tr '[:upper:]' '[:lower:]'`
+    local TARGET=`basename "$XML_FILE" .xml`
+    local PACKAGE=`cat "$XML_FILE" | grep -Po '(?<=Package=")[A-Z]+' | tr '[:upper:]' '[:lower:]'`
 
-    local MX_TAG_SHORT=`echo "${MX_TAG:5}" | tr '-' '.' | tr -d '),' | tr '(' '-' | tr '[:upper:]' '[:lower:]'`
+    local TARGET_NAME=`echo "${TARGET:5}" | tr '-' '.' | tr -d '),' | tr '(' '-' | tr '[:upper:]' '[:lower:]'`
 
-    local TARGET="${MX_TAG_SHORT::-2}_$MX_PACK"
-    test -f "$DIR_VC_TARGETS/$TARGET" &&
-        TARGET="${MX_TAG_SHORT}_$MX_PACK"
+    # try to shorten name
+    local FILE_NAME="${TARGET_NAME::-2}_$PACKAGE"
+    test -f "$DIR_VC_TARGETS/$FILE_NAME" &&
+        FILE_NAME="${TARGET_NAME}_$PACKAGE"
 
-    echo "$MX_TAG" > "$DIR_VC_TARGETS/$TARGET"
+    echo "$TARGET" > "$DIR_VC_TARGETS/$FILE_NAME"
 }
 
 # ---------------------------------------------------------------------------------------------------------------------

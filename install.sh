@@ -6,6 +6,55 @@ source "$VCUBE_DIR/env.sh"
 
 # ---------------------------------------------------------------------------------------------------------------------
 
+function add_target()
+{
+    local TARGET="$1"
+    local PACKAGE="$2"
+
+    # remove 'STR32' prefix and make lowercase
+    local TARGET_NAME=`echo "${TARGET:5}" | tr '[:upper:]' '[:lower:]'`
+
+    # try to shorten name
+    local FILE_NAME="${TARGET_NAME::-2}-$PACKAGE"
+    test -f "$DIR_VC_TARGETS/$FILE_NAME" &&
+        FILE_NAME="${TARGET_NAME}-$PACKAGE"
+
+    echo "$TARGET" > "$DIR_VC_TARGETS/$FILE_NAME"
+}
+
+function explode_variants()
+{
+    local TARGET="$1"
+    local PACKAGE="$2"
+
+    # prepare template and variant list
+    local NAME_TEMPLATE=`echo "$TARGET" | sed -e 's+[(][^)]*[)]+@+'`
+    local VARIANTS=`echo "$TARGET" | grep -Po '\([^\)]+\)' | tr -d '(),'`
+    VARIANTS="${VARIANTS//-}"
+
+    # make variants
+    for (( i=0; i<${#VARIANTS}; i++ )); do
+        TARGET=`echo "$NAME_TEMPLATE" | sed -e "s+@+${VARIANTS:$i:1}+"`
+        add_target "$TARGET" "$PACKAGE"
+    done
+}
+
+function process_xml
+{
+    local XML_FILE="$1"
+
+    local TARGET=`basename "$XML_FILE" .xml`
+    local PACKAGE=`cat "$XML_FILE" | grep -Po '(?<=Package=")[A-Z]+' | tr '[:upper:]' '[:lower:]'`
+
+    if echo "$TARGET" | grep '(' > /dev/null; then
+        explode_variants "$TARGET" "$PACKAGE"
+    else
+        add_target "$TARGET" "$PACKAGE"
+    fi
+}
+
+# ---------------------------------------------------------------------------------------------------------------------
+
 # install folder
 DIR_OUTPUT="$R/build"
 VC_INSTALL="$DIR_OUTPUT/vcube-install"
@@ -29,16 +78,7 @@ DIR_VC_TARGETS="$VC_INSTALL/targets"
     mkdir -p "$DIR_VC_TARGETS"
 
     for f in $PATH_CUBE_MX_FOLDER/db/mcu/STM32*.xml; do
-        MX_TAG=`basename "$f" .xml`
-        MX_TAG_SHORT=`echo "${MX_TAG:5}" | tr '-' '.' | tr -d '),' | tr '(' '-' | tr '[:upper:]' '[:lower:]'`
-        MX_PACK=`cat "$f" | grep -Po '(?<=Package=")[A-Z]+' | tr '[:upper:]' '[:lower:]'`
-
-        TARGET="${MX_TAG_SHORT::-2}_$MX_PACK"
-
-        test -f "$DIR_VC_TARGETS/$TARGET" &&
-            TARGET="${MX_TAG_SHORT}_$MX_PACK"
-
-        echo "$MX_TAG" > "$DIR_VC_TARGETS/$TARGET"
+        process_xml "$f"
     done
 }
 

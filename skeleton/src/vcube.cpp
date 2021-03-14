@@ -1,12 +1,18 @@
 #include <main.h>
+#include <periph/gpio.hpp>
+
+using namespace VanillaCube;
+using namespace Periph;
+
+using PinLED = GpioPin<PortA, 0>;
 
 void vcube_init()
 {
-
+    PinLED::configure(OutputMode::PushPull);
 }
 
 void vcube_loop()
 {
     LL_mDelay(1000);
-    LL_GPIO_TogglePin(PIN_BACKLIGHT_GPIO_Port, PIN_BACKLIGHT_Pin);
+    PinLED::toggle();
 }

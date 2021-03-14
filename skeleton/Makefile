@@ -57,6 +57,7 @@ ${OUT_GENERATED}: ${PROJECT_FILE} ${OUT_GENERATOR_SCRIPT} Makefile ${DIR_INJECTI
 	sed -i '/# paths/,/# source/c\___PATHS___'                  ${DIR_GENERATED}/Makefile
 	sed -i '/# binaries/,/# CFLAGS/c\___BIN_AND_CPP_SOURCES___' ${DIR_GENERATED}/Makefile
 	sed -i '/vpath %.s/a\___COMPILE___'                         ${DIR_GENERATED}/Makefile
+	sed -i '/C_INCLUDES =/a\-I${PATH_VCUBE}/lib/inc \\'         ${DIR_GENERATED}/Makefile
 	sed -i -e '/___PATHS___/{r ${DIR_INJECTIONS}/paths.mk' -e 'd}'                 ${DIR_GENERATED}/Makefile
 	sed -i -e '/___BIN_AND_CPP_SOURCES___/{r ${DIR_INJECTIONS}/bin_cpp.mk' -e 'd}' ${DIR_GENERATED}/Makefile
 	sed -i -e '/___COMPILE___/{r ${DIR_INJECTIONS}/compile.mk' -e 'd}'             ${DIR_GENERATED}/Makefile

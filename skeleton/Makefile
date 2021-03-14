@@ -32,6 +32,8 @@ OUT_GENERATED        = ${DIR_OUTPUT}/.generated
 OUT_INJECTED         = ${DIR_OUTPUT}/.injected
 OUT_HEX_IMAGE        = ${DIR_IMAGES}/${TARGET}.hex
 
+RM = rm -Rf
+
 .PHONY: all clean clean-deep clean-purge ${OUT_HEX_IMAGE}
 
 all: ${OUT_HEX_IMAGE}
@@ -46,7 +48,7 @@ ${OUT_GENERATOR_SCRIPT}: ${IN_GENERATOR_SCRIPT} # | output folder already exsist
 	cat ${IN_GENERATOR_SCRIPT} | sed 's+@IOC_PATH@+${R}/${PROJECT_FILE}+' > ${OUT_GENERATOR_SCRIPT}
 
 ${OUT_GENERATED}: ${PROJECT_FILE} ${OUT_GENERATOR_SCRIPT}
-	rm -f ${DIR_GENERATED}/Makefile
+	${RM} ${DIR_GENERATED}/Makefile
 	${PATH_CUBE_MX} -q ${R}/${OUT_GENERATOR_SCRIPT}
 	touch ${OUT_GENERATED}
 
@@ -86,17 +88,24 @@ ${DIR_VSCODE}:
 	mkdir $@
 
 clean:
-	rm -Rf ${DIR_OBJ} ${DIR_IMAGES}
+	${RM} ${DIR_OBJ} ${DIR_IMAGES}
 
 clean-deep: clean
 	find ${DIR_GENERATED} ! -name '${TARGET}.ioc' -type f -exec rm -f {} +
-	rm ${OUT_GENERATED} ${OUT_INJECTED}
+	${RM} ${OUT_GENERATED} ${OUT_INJECTED}
 
 clean-purge: clean-deep
-	rm -Rf ${DIR_OUTPUT}
+	${RM} ${DIR_OUTPUT}
 	${PATH_VCUBE}/install.sh
 
 # ---------------------------------------------------------------------------------------------------------------------
+
+.PHONY: update-vanillacube edit-project flash flash-rst
+
+update-vanillacube:
+	git -C ${PATH_VCUBE} checkout master
+	git submodule foreach git pull origin master
+	${PATH_VCUBE}/install.sh
 
 edit-project:
 	${PATH_CUBE_MX} ${R}/${PROJECT_FILE}
@@ -108,4 +117,3 @@ flash-rst:
 	${PATH_CUBE_PROG} -c port=SWD mode=UR -rst
 
 debug-% : ; @echo $* = ${$*}
-

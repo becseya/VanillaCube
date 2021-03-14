@@ -1,0 +1,22 @@
+{
+    "configurations": [
+        {
+            "name": "VanillaCube",
+            "includePath": [
+                "${workspaceFolder}/**",
+                "${workspaceFolder}/generated",
+                "${workspaceFolder}/VanillaCube/lib/inc"
+            ],
+            "defines": [
+                "USE_FULL_LL_DRIVER",
+                "PREFETCH_ENABLE",
+                "@TARGET_DEF@"
+            ],
+            "compilerPath": "/usr/bin/arm-none-eabi-gcc",
+            "cStandard": "gnu17",
+            "cppStandard": "c++17",
+            "intelliSenseMode": "linux-gcc-x64"
+        }
+    ],
+    "version": 4
+}

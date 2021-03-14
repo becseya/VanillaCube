@@ -1,35 +1,34 @@
 #pragma once
 
-#include "lib.h"
+#include "peripheral.hpp"
 
 #include <stm32f1xx_ll_gpio.h>
-
-#ifdef GPIOA_BASE
-    #define PortA (GPIOA_BASE)
-#endif
-#ifdef GPIOB_BASE
-    #define PortB (GPIOB_BASE)
-#endif
-#ifdef GPIOC_BASE
-    #define PortC (GPIOC_BASE)
-#endif
-#ifdef GPIOD_BASE
-    #define PortD (GPIOD_BASE)
-#endif
-#ifdef GPIOE_BASE
-    #define PortE (GPIOE_BASE)
-#endif
-#ifdef GPIOF_BASE
-    #define PortF (GPIOF_BASE)
-#endif
-#ifdef GPIOG_BASE
-    #define PortG (GPIOG_BASE)
-#endif
-
-// --------------------------------------------------------------------------------------------------------------------
+#include <stm32f1xx_ll_rcc.h>
 
 namespace VanillaCube {
 namespace Periph {
+
+#ifdef GPIOA_BASE
+using GpioA = periph_wrapper_t<GPIOA_BASE, Bus::APB2, LL_APB2_GRP1_PERIPH_GPIOA>;
+#endif
+#ifdef GPIOB_BASE
+using GpioB = periph_wrapper_t<GPIOB_BASE, Bus::APB2, LL_APB2_GRP1_PERIPH_GPIOB>;
+#endif
+#ifdef GPIOC_BASE
+using GpioC = periph_wrapper_t<GPIOC_BASE, Bus::APB2, LL_APB2_GRP1_PERIPH_GPIOC>;
+#endif
+#ifdef GPIOD_BASE
+using GpioD = periph_wrapper_t<GPIOD_BASE, Bus::APB2, LL_APB2_GRP1_PERIPH_GPIOD>;
+#endif
+#ifdef GPIOE_BASE
+using GpioE = periph_wrapper_t<GPIOE_BASE, Bus::APB2, LL_APB2_GRP1_PERIPH_GPIOE>;
+#endif
+#ifdef GPIOF_BASE
+using GpioF = periph_wrapper_t<GPIOF_BASE, Bus::APB2, LL_APB2_GRP1_PERIPH_GPIOF>;
+#endif
+#ifdef GPIOG_BASE
+using GpioG = periph_wrapper_t<GPIOG_BASE, Bus::APB2, LL_APB2_GRP1_PERIPH_GPIOG>;
+#endif
 
 enum class GpioSpeed
 {
@@ -54,7 +53,7 @@ enum class InputMode
     PullUp,
 };
 
-typedef uint32_t gpio_port_t;
+// --------------------------------------------------------------------------------------------------------------------
 
 namespace { // helper functions inside anonymous namespace
 
@@ -68,87 +67,60 @@ struct port_masks_t
 
 uint32_t GET_MASK(const OutputMode mode, const GpioSpeed speed = GpioSpeed::Slow);
 uint32_t GET_MASK(const InputMode mode);
-void     SET_MASK(gpio_port_t port, const uint32_t pin, const uint32_t mask);
+void     SET_MASK(GPIO_TypeDef& gpio, const uint32_t pin, const uint32_t mask);
 void     CALCULATE_MASK(port_masks_t& masks, const uint32_t mode, const uint32_t size, const uint32_t offset);
 
-ALWAYS_INLINE GPIO_TypeDef& DEREF(gpio_port_t port)
+template<typename PERIPH>
+ALWAYS_INLINE GPIO_TypeDef& DEREF()
 {
-    return *(GPIO_TypeDef*)port;
+    return *(GPIO_TypeDef*)PERIPH::controlAddr;
 }
 
 } // namespace
 
 // --------------------------------------------------------------------------------------------------------------------
 
-namespace Gpio {
-
-static void configure(gpio_port_t port, const uint32_t pin, const OutputMode mode, const GpioSpeed speed)
-{
-    SET_MASK(port, pin, GET_MASK(mode, speed));
-}
-
-static void configure(gpio_port_t port, const uint32_t pin, const InputMode mode)
-{
-    SET_MASK(port, pin, GET_MASK(mode));
-
-    if (mode == InputMode::PullDown)
-        DEREF(port).BRR = (1 << pin);
-    else if (mode == InputMode::PullUp)
-        DEREF(port).BSRR = (1 << pin);
-}
-
-ALWAYS_INLINE void set(gpio_port_t port, const uint32_t pin, bool val)
-{
-    if (val)
-        DEREF(port).BSRR = (1 << pin);
-    else
-        DEREF(port).BRR = (1 << pin);
-}
-
-ALWAYS_INLINE static bool get(gpio_port_t port, const uint32_t pin)
-{
-    return (DEREF(port).IDR & (1 << pin));
-}
-
-ALWAYS_INLINE static void toggle(gpio_port_t port, const uint32_t pin)
-{
-    if (DEREF(port).ODR & (1 << pin))
-        DEREF(port).BRR = (1 << pin);
-    else
-        DEREF(port).BSRR = (1 << pin);
-}
-} // namespace Gpio
-
-template<gpio_port_t PORT, uint32_t PIN>
-struct GpioPin
+template<typename PERIPH, uint32_t PIN>
+struct GpioPin: public Peripheral<PERIPH>
 {
     ALWAYS_INLINE static void configure(const OutputMode mode, const GpioSpeed speed = GpioSpeed::Slow)
     {
-        Gpio::configure(PORT, PIN, mode, speed);
+        SET_MASK(DEREF<PERIPH>(), PIN, GET_MASK(mode, speed));
     }
 
     ALWAYS_INLINE static void configure(const InputMode mode)
     {
-        Gpio::configure(PORT, PIN, mode);
+        SET_MASK(DEREF<PERIPH>(), PIN, GET_MASK(mode));
+
+        if (mode == InputMode::PullDown)
+            DEREF<PERIPH>().BRR = (1 << PIN);
+        else if (mode == InputMode::PullUp)
+            DEREF<PERIPH>().BSRR = (1 << PIN);
     }
 
     ALWAYS_INLINE static void set(bool val)
     {
-        Gpio::set(PORT, PIN, val);
+        if (val)
+            DEREF<PERIPH>().BSRR = (1 << PIN);
+        else
+            DEREF<PERIPH>().BRR = (1 << PIN);
     }
 
     ALWAYS_INLINE static bool get()
     {
-        return Gpio::get(PORT, PIN);
+        return (DEREF<PERIPH>().IDR & (1 << PIN));
     }
 
     ALWAYS_INLINE static void toggle()
     {
-        Gpio::toggle(PORT, PIN);
+        if (DEREF<PERIPH>().ODR & (1 << PIN))
+            DEREF<PERIPH>().BRR = (1 << PIN);
+        else
+            DEREF<PERIPH>().BSRR = (1 << PIN);
     }
 };
 
-template<gpio_port_t PORT, uint32_t SIZE, uint32_t OFFSET = 0>
+template<typename PERIPH, uint32_t SIZE, uint32_t OFFSET = 0>
 class GpioPort
 {
     // switching between I/O modes is highly time critical, therefore we are calculating the masks in advance
@@ -159,12 +131,12 @@ class GpioPort
     ALWAYS_INLINE static void write(uint32_t data)
     {
         data &= N_ONES(SIZE);
-        DEREF(PORT).BSRR = ((~data << OFFSET) << 16) | ((data << OFFSET) & 0xFF);
+        DEREF<PERIPH>().BSRR = ((~data << OFFSET) << 16) | ((data << OFFSET) & 0xFF);
     }
 
     ALWAYS_INLINE static uint32_t read()
     {
-        return (DEREF(PORT).IDR >> OFFSET) & N_ONES(SIZE);
+        return (DEREF<PERIPH>().IDR >> OFFSET) & N_ONES(SIZE);
     }
 
     ALWAYS_INLINE static void setAsOutput()
@@ -193,10 +165,10 @@ class GpioPort
     ALWAYS_INLINE static void applyMasks(const port_masks_t& m)
     {
         if (m.l_cli_mask_inverted != 0xFFFF)
-            DEREF(PORT).CRL = (DEREF(PORT).CRL & m.l_cli_mask_inverted) | m.l_set_mask;
+            DEREF<PERIPH>().CRL = (DEREF<PERIPH>().CRL & m.l_cli_mask_inverted) | m.l_set_mask;
 
         if (m.h_cli_mask_inverted != 0xFFFF)
-            DEREF(PORT).CRH = (DEREF(PORT).CRH & m.h_cli_mask_inverted) | m.h_set_mask;
+            DEREF<PERIPH>().CRH = (DEREF<PERIPH>().CRH & m.h_cli_mask_inverted) | m.h_set_mask;
     }
 };
 
@@ -248,12 +220,12 @@ uint32_t GET_MASK(const InputMode mode)
     return 0; // silence compiler
 }
 
-void SET_MASK(gpio_port_t port, const uint32_t pin, const uint32_t mask)
+void SET_MASK(GPIO_TypeDef& gpio, const uint32_t pin, const uint32_t mask)
 {
     if (pin < 8)
-        DEREF(port).CRL = (DEREF(port).CRL & ~(0b1111 << (4 * pin))) | (mask << (4 * pin));
+        gpio.CRL = (gpio.CRL & ~(0b1111 << (4 * pin))) | (mask << (4 * pin));
     else
-        DEREF(port).CRH = (DEREF(port).CRH & ~(0b1111 << (4 * (pin - 8)))) | (mask << (4 * (pin - 8)));
+        gpio.CRH = (gpio.CRH & ~(0b1111 << (4 * (pin - 8)))) | (mask << (4 * (pin - 8)));
 }
 
 void CALCULATE_MASK(port_masks_t& m, const uint32_t mode, const uint32_t size, const uint32_t offset)

@@ -6,10 +6,11 @@
 using namespace VanillaCube;
 using namespace Periph;
 
-using PinLED = GpioPin<PortA, 0>;
+using PinLED = GpioPin<GpioA, 0>;
 
 void vcube_init()
 {
+    PinLED::enableClock();
     PinLED::configure(OutputMode::PushPull);
 }
 

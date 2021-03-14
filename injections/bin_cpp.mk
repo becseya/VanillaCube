@@ -42,6 +42,7 @@ ADDITIONAL_C_SOURCES := $(filter-out ${C_SOURCES},${EXTRA_LL_SOURCES})
 C_SOURCES += ${ADDITIONAL_C_SOURCES}
 
 CPP_SOURCES = $(shell find ${DIR_CPP_SRC} -name "*.cpp")
+CPP_SOURCES += $(shell find ${DIR_LIB_SRC} -name "*.cpp")
 
 # end of injection ----------------------------------------------------------------------------------------------------
 

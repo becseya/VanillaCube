@@ -1,4 +1,6 @@
 #include <main.h>
+
+#include <util.hpp>
 #include <periph/gpio.hpp>
 
 using namespace VanillaCube;
@@ -13,6 +15,6 @@ void vcube_init()
 
 void vcube_loop()
 {
-    LL_mDelay(1000);
+    Util::DelayMs(1000);
     PinLED::toggle();
 }

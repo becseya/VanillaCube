@@ -1,5 +1,5 @@
 
-# injected by CubeVanilla IDE -----------------------------------------------------------------------------------------
+# injected by VanillaCube IDE -----------------------------------------------------------------------------------------
 
 OBJECTS += $(addprefix ${BUILD_DIR}/,$(notdir ${CPP_SOURCES:.cpp=.o}))
 vpath %.cpp $(sort $(dir ${CPP_SOURCES}))

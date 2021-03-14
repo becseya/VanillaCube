@@ -58,9 +58,18 @@ typedef uint32_t gpio_port_t;
 
 namespace { // helper functions inside anonymous namespace
 
+struct port_masks_t
+{
+    uint32_t h_set_mask          = 0;
+    uint32_t h_cli_mask_inverted = 0xFFFF;
+    uint32_t l_set_mask          = 0;
+    uint32_t l_cli_mask_inverted = 0xFFFF;
+};
+
 uint32_t GET_MASK(const OutputMode mode, const GpioSpeed speed = GpioSpeed::Slow);
 uint32_t GET_MASK(const InputMode mode);
 void     SET_MASK(gpio_port_t port, const uint32_t pin, const uint32_t mask);
+void     CALCULATE_MASK(port_masks_t& masks, const uint32_t mode, const uint32_t size, const uint32_t offset);
 
 ALWAYS_INLINE GPIO_TypeDef& DEREF(gpio_port_t port)
 {
@@ -139,6 +148,58 @@ struct GpioPin
     }
 };
 
+template<gpio_port_t PORT, uint32_t SIZE, uint32_t OFFSET = 0>
+class GpioPort
+{
+    // switching between I/O modes is highly time critical, therefore we are calculating the masks in advance
+    static inline port_masks_t mInput;
+    static inline port_masks_t mOutput;
+
+  public:
+    ALWAYS_INLINE static void write(uint32_t data)
+    {
+        data &= N_ONES(SIZE);
+        DEREF(PORT).BSRR = ((~data << OFFSET) << 16) | ((data << OFFSET) & 0xFF);
+    }
+
+    ALWAYS_INLINE static uint32_t read()
+    {
+        return (DEREF(PORT).IDR >> OFFSET) & N_ONES(SIZE);
+    }
+
+    ALWAYS_INLINE static void setAsOutput()
+    {
+        applyMasks(mOutput);
+    }
+
+    ALWAYS_INLINE static void setAsInput()
+    {
+        applyMasks(mInput);
+    }
+
+    static void setOutputMode(const OutputMode mode, const GpioSpeed speed = GpioSpeed::Fast)
+    {
+        CALCULATE_MASK(mOutput, GET_MASK(mode, speed), SIZE, OFFSET);
+        setAsOutput();
+    }
+
+    static void setInputMode(const InputMode mode)
+    {
+        CALCULATE_MASK(mInput, GET_MASK(mode), SIZE, OFFSET);
+        setAsInput();
+    }
+
+  private:
+    ALWAYS_INLINE static void applyMasks(const port_masks_t& m)
+    {
+        if (m.l_cli_mask_inverted != 0xFFFF)
+            DEREF(PORT).CRL = (DEREF(PORT).CRL & m.l_cli_mask_inverted) | m.l_set_mask;
+
+        if (m.h_cli_mask_inverted != 0xFFFF)
+            DEREF(PORT).CRH = (DEREF(PORT).CRH & m.h_cli_mask_inverted) | m.h_set_mask;
+    }
+};
+
 // --------------------------------------------------------------------------------------------------------------------
 
 namespace {
@@ -193,6 +254,29 @@ void SET_MASK(gpio_port_t port, const uint32_t pin, const uint32_t mask)
         DEREF(port).CRL = (DEREF(port).CRL & ~(0b1111 << (4 * pin))) | (mask << (4 * pin));
     else
         DEREF(port).CRH = (DEREF(port).CRH & ~(0b1111 << (4 * (pin - 8)))) | (mask << (4 * (pin - 8)));
+}
+
+void CALCULATE_MASK(port_masks_t& m, const uint32_t mode, const uint32_t size, const uint32_t offset)
+{
+    m.h_set_mask          = 0;
+    m.h_cli_mask_inverted = 0xFFFF;
+    m.l_set_mask          = 0;
+    m.l_cli_mask_inverted = 0xFFFF;
+
+    if (offset < 8) {
+        for (uint32_t i = offset; (i < offset + size) && (i < 8); i++) {
+            m.l_cli_mask_inverted &= ~(0b1111 << (4 * i));
+            m.l_set_mask |= (mode << (4 * i));
+        }
+    }
+
+    const int32_t last_index = (offset + size - 1);
+    if (last_index >= 8) {
+        for (int32_t i = (last_index - 8); (i >= (int32_t)offset - 8) && (i >= 0); i--) {
+            m.h_cli_mask_inverted &= ~(0b1111 << (4 * i));
+            m.h_set_mask |= (mode << (4 * i));
+        }
+    }
 }
 
 } // namespace

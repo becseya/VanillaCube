@@ -50,15 +50,21 @@ ${OUT_GENERATOR_SCRIPT}: ${IN_GENERATOR_SCRIPT} # | output folder already exsist
 ${OUT_GENERATED}: ${PROJECT_FILE} | ${OUT_GENERATOR_SCRIPT}
 	${RM} ${DIR_GENERATED}/Makefile
 	${PATH_CUBE_MX} -q ${R}/${OUT_GENERATOR_SCRIPT}
+	mv ${DIR_GENERATED}/Makefile ${DIR_GENERATED}/Makefile.original
+	mv ${DIR_GENERATED}/Inc/main.h ${DIR_GENERATED}/Inc/main.h.original
+	mv ${DIR_GENERATED}/Src/main.c ${DIR_GENERATED}/Src/main.c.original
 	touch ${OUT_GENERATED}
 
 ${OUT_INJECTED}: ${OUT_GENERATED} Makefile ${DIR_INJECTIONS}/*.mk | ${DIR_VSCODE}
 # inject main
+	cp ${DIR_GENERATED}/Inc/main.h.original ${DIR_GENERATED}/Inc/main.h
+	cp ${DIR_GENERATED}/Src/main.c.original ${DIR_GENERATED}/Src/main.c
 	sed -i '/USER CODE END EFP/a\void vcube_init();' ${DIR_GENERATED}/Inc/main.h
 	sed -i '/USER CODE END EFP/a\void vcube_loop();' ${DIR_GENERATED}/Inc/main.h
 	sed -i '/USER CODE END 2/a\  vcube_init();'       ${DIR_GENERATED}/Src/main.c
 	sed -i '/USER CODE END WHILE/a\    vcube_loop();' ${DIR_GENERATED}/Src/main.c
 # inject makefile
+	cp ${DIR_GENERATED}/Makefile.original ${DIR_GENERATED}/Makefile
 	sed -i '/# paths/,/# source/c\___PATHS___'                  ${DIR_GENERATED}/Makefile
 	sed -i '/# binaries/,/# CFLAGS/c\___BIN_AND_CPP_SOURCES___' ${DIR_GENERATED}/Makefile
 	sed -i '/vpath %.s/a\___COMPILE___'                         ${DIR_GENERATED}/Makefile
@@ -88,11 +94,12 @@ ${DIR_VSCODE}:
 	mkdir $@
 
 clean:
-	${RM} ${DIR_OBJ} ${DIR_IMAGES}
+	${RM} ${DIR_OBJ} ${OUT_INJECTED} ${DIR_IMAGES}
 
 clean-deep: clean
 	find ${DIR_GENERATED} ! -name '${TARGET}.ioc' -type f -exec rm -f {} +
-	${RM} ${OUT_GENERATED} ${OUT_INJECTED} ${OUT_GENERATOR_SCRIPT}
+	find ${DIR_GENERATED} -type d -empty -delete
+	${RM} ${OUT_GENERATED} ${OUT_GENERATOR_SCRIPT}
 
 clean-purge: clean-deep
 	${RM} ${DIR_OUTPUT}

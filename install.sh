@@ -91,5 +91,5 @@ DIR_SRC="$R/src"
 ! test -d "$DIR_SRC" &&
 {
     mkdir -p "$DIR_SRC"
-    cp "$VCUBE_DIR/examples/blink_led/vcube.cpp" "$DIR_SRC"
+    cp "$VCUBE_DIR/examples/blink_led/main.cpp" "$DIR_SRC"
 }

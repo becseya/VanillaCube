@@ -59,10 +59,10 @@ ${OUT_INJECTED}: ${OUT_GENERATED} Makefile ${DIR_INJECTIONS}/*.mk | ${DIR_VSCODE
 # inject main
 	cp ${DIR_GENERATED}/Inc/main.h.original ${DIR_GENERATED}/Inc/main.h
 	cp ${DIR_GENERATED}/Src/main.c.original ${DIR_GENERATED}/Src/main.c
-	sed -i '/USER CODE END EFP/a\void vcube_init();' ${DIR_GENERATED}/Inc/main.h
-	sed -i '/USER CODE END EFP/a\void vcube_loop();' ${DIR_GENERATED}/Inc/main.h
-	sed -i '/USER CODE END 2/a\  vcube_init();'       ${DIR_GENERATED}/Src/main.c
-	sed -i '/USER CODE END WHILE/a\    vcube_loop();' ${DIR_GENERATED}/Src/main.c
+	sed -i '/USER CODE END EFP/a\void main_init();' ${DIR_GENERATED}/Inc/main.h
+	sed -i '/USER CODE END EFP/a\void main_loop();' ${DIR_GENERATED}/Inc/main.h
+	sed -i '/USER CODE END 2/a\  main_init();'       ${DIR_GENERATED}/Src/main.c
+	sed -i '/USER CODE END WHILE/a\    main_loop();' ${DIR_GENERATED}/Src/main.c
 # inject makefile
 	cp ${DIR_GENERATED}/Makefile.original ${DIR_GENERATED}/Makefile
 	sed -i '/# paths/,/# source/c\___PATHS___'                  ${DIR_GENERATED}/Makefile

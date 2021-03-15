@@ -82,4 +82,14 @@ DIR_VC_TARGETS="$VC_INSTALL/targets"
     done
 }
 
-cp -RT "$VCUBE_DIR/skeleton" "$R"
+cp "$VCUBE_DIR/.gitignore" "$R"
+cp "$VCUBE_DIR/.clang-format" "$R"
+cp "$VCUBE_DIR/Makefile" "$R"
+
+# hello world
+DIR_SRC="$R/src"
+! test -d "$DIR_SRC" &&
+{
+    mkdir -p "$DIR_SRC"
+    cp "$VCUBE_DIR/examples/blink_led/vcube.cpp" "$DIR_SRC"
+}

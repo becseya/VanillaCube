@@ -129,4 +129,4 @@ flash: all
 flash-rst:
 	${PATH_CUBE_PROG} -c port=SWD mode=UR -rst
 
-debug-% : ; @echo $* = ${$*}
+print-% : ; @echo $* = ${$*}

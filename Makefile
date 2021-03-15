@@ -47,7 +47,7 @@ ${IN_GENERATOR_SCRIPT}: ;
 ${OUT_GENERATOR_SCRIPT}: ${IN_GENERATOR_SCRIPT} # | output folder already exsists
 	cat ${IN_GENERATOR_SCRIPT} | sed 's+@IOC_PATH@+${R}/${PROJECT_FILE}+' > ${OUT_GENERATOR_SCRIPT}
 
-${OUT_GENERATED}: ${PROJECT_FILE} ${OUT_GENERATOR_SCRIPT}
+${OUT_GENERATED}: ${PROJECT_FILE} | ${OUT_GENERATOR_SCRIPT}
 	${RM} ${DIR_GENERATED}/Makefile
 	${PATH_CUBE_MX} -q ${R}/${OUT_GENERATOR_SCRIPT}
 	touch ${OUT_GENERATED}
@@ -92,7 +92,7 @@ clean:
 
 clean-deep: clean
 	find ${DIR_GENERATED} ! -name '${TARGET}.ioc' -type f -exec rm -f {} +
-	${RM} ${OUT_GENERATED} ${OUT_INJECTED}
+	${RM} ${OUT_GENERATED} ${OUT_INJECTED} ${OUT_GENERATOR_SCRIPT}
 
 clean-purge: clean-deep
 	${RM} ${DIR_OUTPUT}

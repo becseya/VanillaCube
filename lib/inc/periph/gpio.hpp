@@ -3,7 +3,6 @@
 #include "peripheral.hpp"
 
 #include <stm32f1xx_ll_gpio.h>
-#include <stm32f1xx_ll_rcc.h>
 
 namespace VanillaCube {
 namespace Periph {

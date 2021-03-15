@@ -2,12 +2,7 @@
 
 #include "../lib.h"
 
-extern "C" void LL_APB1_GRP1_EnableClock(uint32_t);
-extern "C" void LL_APB1_GRP1_DisableClock(uint32_t);
-extern "C" void LL_AHB1_GRP1_EnableClock(uint32_t);
-extern "C" void LL_AHB1_GRP1_DisableClock(uint32_t);
-extern "C" void LL_APB2_GRP1_EnableClock(uint32_t);
-extern "C" void LL_APB2_GRP1_DisableClock(uint32_t);
+#include <stm32f1xx_ll_bus.h>
 
 // --------------------------------------------------------------------------------------------------------------------
 

@@ -55,7 +55,8 @@ project generate
 exit
 EOT
 
-rm -Rf "$DIR_GENERATED"
+rm -Rf "$DIR_GENERATED" "$DIR_OUTPUT/.generated" "$DIR_OUTPUT/.injected" "$DIR_OUTPUT/generate.script"
 mkdir "$DIR_GENERATED"
 $PATH_CUBE_MX -q "$NEW_PROJ_SCRIPT"
 mv $DIR_GENERATED/$I_PROJECT_NAME/* "$DIR_GENERATED" && rm -Rf "$DIR_GENERATED/$I_PROJECT_NAME"
+touch "$DIR_OUTPUT/.generated"

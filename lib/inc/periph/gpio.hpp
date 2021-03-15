@@ -3,7 +3,6 @@
 #include "peripheral.hpp"
 
 #include <stm32f1xx_ll_gpio.h>
-#include <stm32f1xx_ll_rcc.h>
 
 namespace VanillaCube {
 namespace Periph {
@@ -81,7 +80,7 @@ ALWAYS_INLINE GPIO_TypeDef& DEREF()
 // --------------------------------------------------------------------------------------------------------------------
 
 template<typename PERIPH, uint32_t PIN>
-struct GpioPin: public Peripheral<PERIPH>
+struct GpioPin : public Peripheral<PERIPH>
 {
     ALWAYS_INLINE static void configure(const OutputMode mode, const GpioSpeed speed = GpioSpeed::Slow)
     {

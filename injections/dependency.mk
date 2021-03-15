@@ -1,13 +1,12 @@
-# paths
+# dependencies
 #######################################
 
 # injected by VanillaCube IDE -----------------------------------------------------------------------------------------
 
-DIR_CPP_SRC = ../src
-DIR_VCL_SRC = ../VanillaCube/lib/src
-BUILD_DIR = ../build/obj
+-include $(shell find ${BUILD_DIR} -name "*.d")
+
+print-% : ; @echo $* = ${$*}
 
 # end of injection ----------------------------------------------------------------------------------------------------
 
-######################################
-# source
+# *** EOF ***

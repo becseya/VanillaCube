@@ -6,7 +6,7 @@ source "$VCUBE_DIR/env.sh"
 
 # ---------------------------------------------------------------------------------------------------------------------
 
-function add_target()
+function add_target
 {
     local TARGET="$1"
     local PACKAGE="$2"
@@ -22,7 +22,7 @@ function add_target()
     echo "$TARGET" > "$DIR_VC_TARGETS/$FILE_NAME"
 }
 
-function explode_variants()
+function explode_variants
 {
     local TARGET="$1"
     local PACKAGE="$2"
@@ -51,6 +51,14 @@ function process_xml
     else
         add_target "$TARGET" "$PACKAGE"
     fi
+}
+
+function copy_link
+{
+    local FILE_NAME="$1"
+
+    ! test -f "$R/$FILE_NAME" && ! test -L "$R/$FILE_NAME" &&
+        ln -s "$VCUBE_DIR/$FILE_NAME" "$R/$FILE_NAME"
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
@@ -82,4 +90,16 @@ DIR_VC_TARGETS="$VC_INSTALL/targets"
     done
 }
 
-cp -RT "$VCUBE_DIR/skeleton" "$R"
+copy_link ".gitignore"
+copy_link ".clang-format"
+copy_link "Makefile"
+
+# hello world
+DIR_SRC="$R/src"
+! test -d "$DIR_SRC" &&
+{
+    mkdir -p "$DIR_SRC"
+    cp "$VCUBE_DIR/examples/blink_led/main.cpp" "$DIR_SRC"
+}
+
+exit 0

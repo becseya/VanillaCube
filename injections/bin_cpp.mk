@@ -1,7 +1,7 @@
 # binaries
 #######################################
 
-# injected by CubeVanilla IDE -----------------------------------------------------------------------------------------
+# injected by VanillaCube IDE -----------------------------------------------------------------------------------------
 
 PREFIX = arm-none-eabi-
 ifdef GCC_PATH
@@ -22,27 +22,26 @@ BIN = $(CP) -O binary -S
 # extra sources
 #######################################
 
-EXTRA_LL_SOURCES =  \
-Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_ll_adc.c \
-Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_ll_crc.c \
-Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_ll_dac.c \
-Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_ll_dma.c \
-Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_ll_exti.c \
-Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_ll_gpio.c \
-Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_ll_i2c.c \
-Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_ll_pwr.c \
-Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_ll_rcc.c \
-Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_ll_rtc.c \
-Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_ll_spi.c \
-Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_ll_tim.c \
-Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_ll_usart.c \
-Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_ll_utils.c
+EXTRA_LL_SOURCES += $(shell find Drivers -name "*_ll_adc.c")
+EXTRA_LL_SOURCES += $(shell find Drivers -name "*_ll_crc.c")
+EXTRA_LL_SOURCES += $(shell find Drivers -name "*_ll_dac.c")
+EXTRA_LL_SOURCES += $(shell find Drivers -name "*_ll_dma.c")
+EXTRA_LL_SOURCES += $(shell find Drivers -name "*_ll_exti.c")
+EXTRA_LL_SOURCES += $(shell find Drivers -name "*_ll_gpio.c")
+EXTRA_LL_SOURCES += $(shell find Drivers -name "*_ll_i2c.c")
+EXTRA_LL_SOURCES += $(shell find Drivers -name "*_ll_pwr.c")
+EXTRA_LL_SOURCES += $(shell find Drivers -name "*_ll_rcc.c")
+EXTRA_LL_SOURCES += $(shell find Drivers -name "*_ll_rtc.c")
+EXTRA_LL_SOURCES += $(shell find Drivers -name "*_ll_spi.c")
+EXTRA_LL_SOURCES += $(shell find Drivers -name "*_ll_tim.c")
+EXTRA_LL_SOURCES += $(shell find Drivers -name "*_ll_usart.c")
+EXTRA_LL_SOURCES += $(shell find Drivers -name "*_ll_utils.c")
 
 ADDITIONAL_C_SOURCES := $(filter-out ${C_SOURCES},${EXTRA_LL_SOURCES})
 C_SOURCES += ${ADDITIONAL_C_SOURCES}
 
 CPP_SOURCES = $(shell find ${DIR_CPP_SRC} -name "*.cpp")
-CPP_SOURCES += $(shell find ${DIR_LIB_SRC} -name "*.cpp")
+LIB_SOURCES = $(shell find ${DIR_VCL_SRC} -name "*.cpp")
 
 # end of injection ----------------------------------------------------------------------------------------------------
 

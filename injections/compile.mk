@@ -1,12 +1,17 @@
 
-# injected by CubeVanilla IDE -----------------------------------------------------------------------------------------
+# injected by VanillaCube IDE -----------------------------------------------------------------------------------------
 
-OBJECTS += $(addprefix ${BUILD_DIR}/,$(notdir ${CPP_SOURCES:.cpp=.o}))
-vpath %.cpp $(sort $(dir ${CPP_SOURCES}))
+OBJECTS += $(subst ${DIR_CPP_SRC},${BUILD_DIR}/src,${CPP_SOURCES:.cpp=.cpp.o})
+OBJECTS += $(subst ${DIR_VCL_SRC},${BUILD_DIR}/lib,${LIB_SOURCES:.cpp=.cpp.o})
 
 CPPFLAGS = ${CFLAGS} -std=c++17 -fno-rtti -fno-exceptions -specs=nosys.specs -Wno-register
 
-${BUILD_DIR}/%.o: %.cpp Makefile | ${BUILD_DIR}
-	${PP} -c ${CPPFLAGS} -Wa,-a,-ad,-alms=${BUILD_DIR}/$(notdir $(<:.cpp=.lst)) $< -o $@
+${BUILD_DIR}/src/%.cpp.o: ${DIR_CPP_SRC}/%.cpp Makefile | ${BUILD_DIR}
+	mkdir -p $(@D)
+	${PP} -c ${CPPFLAGS} -Wa,-a,-ad,-alms=${BUILD_DIR}/$(notdir $(<:.cpp=.cpp.lst)) $< -o $@
+
+${BUILD_DIR}/lib/%.cpp.o: ${DIR_VCL_SRC}/%.cpp Makefile | ${BUILD_DIR}
+	mkdir -p $(@D)
+	${PP} -c ${CPPFLAGS} -Wa,-a,-ad,-alms=${BUILD_DIR}/$(notdir $(<:.cpp=.cpp.lst)) $< -o $@
 
 # end of injection ----------------------------------------------------------------------------------------------------

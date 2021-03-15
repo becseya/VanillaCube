@@ -104,7 +104,7 @@ clean-purge: clean-deep
 
 update-vanillacube:
 	git -C ${PATH_VCUBE} checkout master
-	git submodule foreach git pull origin master
+	git -C ${PATH_VCUBE} pull
 	${PATH_VCUBE}/install.sh
 
 edit-project:

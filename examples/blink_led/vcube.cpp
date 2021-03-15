@@ -1,7 +1,7 @@
 #include <main.h>
 
-#include <util.hpp>
 #include <periph/gpio.hpp>
+#include <util.hpp>
 
 using namespace VanillaCube;
 using namespace Periph;

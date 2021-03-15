@@ -100,7 +100,11 @@ clean-purge: clean-deep
 
 # ---------------------------------------------------------------------------------------------------------------------
 
-.PHONY: update-vanillacube edit-project flash flash-rst
+.PHONY: format-all update-vanillacube edit-project flash flash-rst
+
+format-all:
+	find . -name "*.hpp" | xargs clang-format -i
+	find . -name "*.cpp" | xargs clang-format -i
 
 update-vanillacube:
 	git -C ${PATH_VCUBE} checkout master

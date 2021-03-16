@@ -53,12 +53,13 @@ function process_xml
     fi
 }
 
-function copy_link
+function copy_or_link
 {
-    local FILE_NAME="$1"
+    local CMD="$1"
+    local FILE_NAME="$2"
 
     ! test -f "$R/$FILE_NAME" && ! test -L "$R/$FILE_NAME" &&
-        ln -s "$VCUBE_DIR/$FILE_NAME" "$R/$FILE_NAME"
+        $CMD "$VCUBE_DIR/$FILE_NAME" "$R/$FILE_NAME"
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
@@ -90,9 +91,9 @@ DIR_VC_TARGETS="$VC_INSTALL/targets"
     done
 }
 
-copy_link ".gitignore"
-copy_link ".clang-format"
-copy_link "Makefile"
+copy_or_link "cp" ".gitignore"
+copy_or_link "cp" ".clang-format"
+copy_or_link "ln -s" "Makefile"
 
 # hello world
 DIR_SRC="$R/src"

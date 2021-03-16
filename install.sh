@@ -93,7 +93,7 @@ DIR_VC_TARGETS="$VC_INSTALL/targets"
 
 copy_or_link "cp" ".gitignore"
 copy_or_link "cp" ".clang-format"
-copy_or_link "ln -s" "Makefile"
+copy_or_link "ln -s -r" "Makefile"
 
 # hello world
 DIR_SRC="$R/src"

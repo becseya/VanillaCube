@@ -122,6 +122,9 @@ struct GpioPin : public Peripheral<PERIPH>
 template<typename PERIPH, uint32_t SIZE, uint32_t OFFSET = 0>
 class GpioPort
 {
+    static_assert(SIZE <= 16, "Max GpioPort<SIZE> is 16");
+    static_assert((SIZE + OFFSET) <= 16, "GpioPort<OFFSET> is too high");
+
     // switching between I/O modes is highly time critical, therefore we are calculating the masks in advance
     static inline port_masks_t mInput;
     static inline port_masks_t mOutput;
@@ -132,7 +135,7 @@ class GpioPort
         uint32_t data_cli = (~data & MASK_FOR_N_BITS(SIZE));
         data &= MASK_FOR_N_BITS(SIZE);
 
-        DEREF<PERIPH>().BSRR = (data_cli << (OFFSET + 16)) | ((data << OFFSET) & 0x00FF);
+        DEREF<PERIPH>().BSRR = (data_cli << (OFFSET + 16)) | (data << OFFSET);
     }
 
     ALWAYS_INLINE static uint32_t read()

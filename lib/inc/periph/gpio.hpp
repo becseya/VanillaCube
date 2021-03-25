@@ -129,8 +129,10 @@ class GpioPort
   public:
     ALWAYS_INLINE static void write(uint32_t data)
     {
+        uint32_t data_cli = (~data & MASK_FOR_N_BITS(SIZE));
         data &= MASK_FOR_N_BITS(SIZE);
-        DEREF<PERIPH>().BSRR = ((~data << OFFSET) << 16) | ((data << OFFSET) & 0xFF);
+
+        DEREF<PERIPH>().BSRR = (data_cli << (OFFSET + 16)) | ((data << OFFSET) & 0x00FF);
     }
 
     ALWAYS_INLINE static uint32_t read()

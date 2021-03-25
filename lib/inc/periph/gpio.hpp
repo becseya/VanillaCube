@@ -162,6 +162,12 @@ class GpioPort
         setAsInput();
     }
 
+    static void configure(const InputMode i_mode, const OutputMode o_mode, const GpioSpeed speed = GpioSpeed::Fast)
+    {
+        CALCULATE_MASK(mInput, GET_MASK(i_mode), SIZE, OFFSET);
+        CALCULATE_MASK(mOutput, GET_MASK(o_mode, speed), SIZE, OFFSET);
+    }
+
   private:
     ALWAYS_INLINE static void applyMasks(const port_masks_t& m)
     {

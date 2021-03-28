@@ -8,10 +8,10 @@ CPPFLAGS = ${CFLAGS} -std=c++17 -fno-rtti -fno-exceptions -specs=nosys.specs -Wn
 
 ${BUILD_DIR}/src/%.cpp.o: ${DIR_CPP_SRC}/%.cpp Makefile | ${BUILD_DIR}
 	mkdir -p $(@D)
-	${PP} -c ${CPPFLAGS} -Wa,-a,-ad,-alms=${BUILD_DIR}/$(notdir $(<:.cpp=.cpp.lst)) $< -o $@
+	${PP} -c ${CPPFLAGS} -Wa,-a,-ad,-alms=$@.lst $< -o $@
 
 ${BUILD_DIR}/lib/%.cpp.o: ${DIR_VCL_SRC}/%.cpp Makefile | ${BUILD_DIR}
 	mkdir -p $(@D)
-	${PP} -c ${CPPFLAGS} -Wa,-a,-ad,-alms=${BUILD_DIR}/$(notdir $(<:.cpp=.cpp.lst)) $< -o $@
+	${PP} -c ${CPPFLAGS} -Wa,-a,-ad,-alms=$@.lst $< -o $@
 
 # end of injection ----------------------------------------------------------------------------------------------------

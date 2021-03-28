@@ -1,8 +1,8 @@
 # Makefile installed by VanillaCube IDE
 
 R             = $(shell pwd)
-DIR_OUTPUT    = ./build
-DIR_GENERATED = ./generated
+DIR_OUTPUT    = ${R}/build
+DIR_GENERATED = ${R}/generated
 MK_ENV        = ${DIR_OUTPUT}/vcube-install/env.mk
 PROJECT_FILE  = $(shell find ${DIR_GENERATED} -name '*.ioc' 2>/dev/null)
 
@@ -23,7 +23,7 @@ TARGET = $(shell cat ${PROJECT_FILE} | grep -Po '(?<=ProjectManager.ProjectName=
 DIR_OBJ              = ${DIR_OUTPUT}/obj
 DIR_BIN_IMAGES       = ${DIR_OUTPUT}/images
 DIR_INJECTIONS       = ${PATH_VCUBE}/injections
-DIR_VSCODE           = ./.vscode
+DIR_VSCODE           = ${R}/.vscode
 
 IN_GENERATOR_SCRIPT  = ${DIR_INJECTIONS}/generate.template
 
@@ -44,11 +44,11 @@ ${IN_GENERATOR_SCRIPT}: ;
 # ---------------------------------------------------------------------------------------------------------------------
 
 ${OUT_GENERATOR_SCRIPT}: ${IN_GENERATOR_SCRIPT} # | output folder already exsists
-	cat ${IN_GENERATOR_SCRIPT} | sed 's+@IOC_PATH@+${R}/${PROJECT_FILE}+' > ${OUT_GENERATOR_SCRIPT}
+	cat ${IN_GENERATOR_SCRIPT} | sed 's+@IOC_PATH@+${PROJECT_FILE}+' > ${OUT_GENERATOR_SCRIPT}
 
 ${OUT_GENERATED}: ${PROJECT_FILE} | ${OUT_GENERATOR_SCRIPT}
 	${RM} ${DIR_GENERATED}/Makefile
-	${PATH_CUBE_MX} -q ${R}/${OUT_GENERATOR_SCRIPT}
+	${PATH_CUBE_MX} -q ${OUT_GENERATOR_SCRIPT}
 	mv ${DIR_GENERATED}/Makefile ${DIR_GENERATED}/Makefile.original
 	mv ${DIR_GENERATED}/Inc/main.h ${DIR_GENERATED}/Inc/main.h.original
 	mv ${DIR_GENERATED}/Src/main.c ${DIR_GENERATED}/Src/main.c.original
@@ -80,7 +80,7 @@ ${DIR_GENERATED}/Makefile: ${OUT_GENERATED} Makefile ${DIR_INJECTIONS}/*.mk | ${
 
 .SILENT: ${OUT_HEX_IMAGE}
 ${OUT_HEX_IMAGE}: ${DIR_GENERATED}/Makefile | ${DIR_BIN_IMAGES} ${DIR_OBJ}
-	cd ${DIR_GENERATED} && make
+	cd ${DIR_GENERATED} && make -j
 	cp ${DIR_OBJ}/${TARGET}.hex ${OUT_HEX_IMAGE}
 
 ${DIR_OBJ}:

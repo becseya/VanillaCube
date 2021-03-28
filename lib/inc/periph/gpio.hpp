@@ -84,11 +84,15 @@ struct GpioPin : public Peripheral<PERIPH>
 {
     ALWAYS_INLINE static void configure(const OutputMode mode, const GpioSpeed speed = GpioSpeed::Slow)
     {
+        Peripheral<PERIPH>::MakeSureClockIsEnabled();
+
         SET_MASK(DEREF<PERIPH>(), PIN, GET_MASK(mode, speed));
     }
 
     ALWAYS_INLINE static void configure(const InputMode mode)
     {
+        Peripheral<PERIPH>::MakeSureClockIsEnabled();
+
         SET_MASK(DEREF<PERIPH>(), PIN, GET_MASK(mode));
 
         if (mode == InputMode::PullDown)
@@ -155,18 +159,24 @@ class GpioPort
 
     static void setOutputMode(const OutputMode mode, const GpioSpeed speed = GpioSpeed::Fast)
     {
+        Peripheral<PERIPH>::MakeSureClockIsEnabled();
+
         CALCULATE_MASK(mOutput, GET_MASK(mode, speed), SIZE, OFFSET);
         setAsOutput();
     }
 
     static void setInputMode(const InputMode mode)
     {
+        Peripheral<PERIPH>::MakeSureClockIsEnabled();
+
         CALCULATE_MASK(mInput, GET_MASK(mode), SIZE, OFFSET);
         setAsInput();
     }
 
     static void configure(const InputMode i_mode, const OutputMode o_mode, const GpioSpeed speed = GpioSpeed::Fast)
     {
+        Peripheral<PERIPH>::MakeSureClockIsEnabled();
+
         CALCULATE_MASK(mInput, GET_MASK(i_mode), SIZE, OFFSET);
         CALCULATE_MASK(mOutput, GET_MASK(o_mode, speed), SIZE, OFFSET);
     }

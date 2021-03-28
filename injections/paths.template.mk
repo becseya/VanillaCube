@@ -3,9 +3,9 @@
 
 # injected by VanillaCube IDE -----------------------------------------------------------------------------------------
 
-DIR_CPP_SRC = ../src
-DIR_VCL_SRC = ../VanillaCube/lib/src
-BUILD_DIR = ../build/obj
+DIR_CPP_SRC = @DIR_CPP_SRC@
+DIR_VCL_SRC = @DIR_VCL_SRC@
+BUILD_DIR = @BUILD_DIR@
 
 # end of injection ----------------------------------------------------------------------------------------------------
 

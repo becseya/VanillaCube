@@ -21,7 +21,7 @@ TARGET = $(shell cat ${PROJECT_FILE} | grep -Po '(?<=ProjectManager.ProjectName=
 # ---------------------------------------------------------------------------------------------------------------------
 
 DIR_OBJ              = ${DIR_OUTPUT}/obj
-DIR_IMAGES           = ${DIR_OUTPUT}/images
+DIR_BIN_IMAGES       = ${DIR_OUTPUT}/images
 DIR_INJECTIONS       = ${PATH_VCUBE}/injections
 DIR_VSCODE           = ./.vscode
 
@@ -29,7 +29,7 @@ IN_GENERATOR_SCRIPT  = ${DIR_INJECTIONS}/generate.template
 
 OUT_GENERATOR_SCRIPT = ${DIR_OUTPUT}/generate.script
 OUT_GENERATED        = ${DIR_OUTPUT}/.generated
-OUT_HEX_IMAGE        = ${DIR_IMAGES}/${TARGET}.hex
+OUT_HEX_IMAGE        = ${DIR_BIN_IMAGES}/${TARGET}.hex
 
 RM = rm -Rf
 
@@ -79,21 +79,21 @@ ${DIR_GENERATED}/Makefile: ${OUT_GENERATED} Makefile ${DIR_INJECTIONS}/*.mk | ${
 	@echo "Target define: ${TARGET_DEF}"
 
 .SILENT: ${OUT_HEX_IMAGE}
-${OUT_HEX_IMAGE}: ${DIR_GENERATED}/Makefile | ${DIR_IMAGES} ${DIR_OBJ}
+${OUT_HEX_IMAGE}: ${DIR_GENERATED}/Makefile | ${DIR_BIN_IMAGES} ${DIR_OBJ}
 	cd ${DIR_GENERATED} && make
 	cp ${DIR_OBJ}/${TARGET}.hex ${OUT_HEX_IMAGE}
 
 ${DIR_OBJ}:
 	mkdir $@
 
-${DIR_IMAGES}:
+${DIR_BIN_IMAGES}:
 	mkdir $@
 
 ${DIR_VSCODE}:
 	mkdir $@
 
 clean:
-	${RM} ${DIR_OBJ} ${DIR_IMAGES} ${DIR_GENERATED}/Makefile
+	${RM} ${DIR_OBJ} ${DIR_BIN_IMAGES} ${DIR_GENERATED}/Makefile
 
 clean-deep: clean
 	find ${DIR_GENERATED} ! -name '${TARGET}.ioc' -type f -exec rm -f {} +
@@ -121,7 +121,7 @@ edit-project:
 	${PATH_CUBE_MX} ${R}/${PROJECT_FILE}
 
 flash: all
-	${PATH_CUBE_PROG} -c port=SWD mode=UR -w ${DIR_IMAGES}/${TARGET}.hex 0x8000000 -v -rst
+	${PATH_CUBE_PROG} -c port=SWD mode=UR -w ${DIR_BIN_IMAGES}/${TARGET}.hex 0x8000000 -v -rst
 
 flash-rst:
 	${PATH_CUBE_PROG} -c port=SWD mode=UR -rst

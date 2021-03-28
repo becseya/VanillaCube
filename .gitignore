@@ -1,4 +1,5 @@
 build/*
 .vscode/*
 generated/*
+images/generated/*
 !generated/*.ioc

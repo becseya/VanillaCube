@@ -3,6 +3,7 @@
 R             = $(shell pwd)
 DIR_OUTPUT    = ${R}/build
 DIR_GENERATED = ${R}/generated
+DIR_IMAGES    = ${R}/images
 MK_ENV        = ${DIR_OUTPUT}/vcube-install/env.mk
 PROJECT_FILE  = $(shell find ${DIR_GENERATED} -name '*.ioc' 2>/dev/null)
 
@@ -32,6 +33,7 @@ OUT_PATHS_MK         = ${DIR_OUTPUT}/paths.mk
 OUT_GENERATOR_SCRIPT = ${DIR_OUTPUT}/generate.script
 OUT_GENERATED        = ${DIR_OUTPUT}/.generated
 OUT_HEX_IMAGE        = ${DIR_BIN_IMAGES}/${TARGET}.hex
+OUT_IMAGES           = ${DIR_OUTPUT}/.images
 
 RM = rm -Rf
 
@@ -67,6 +69,7 @@ ${DIR_GENERATED}/Makefile: ${OUT_GENERATED} Makefile ${DIR_INJECTIONS}/*.mk | ${
 # prepare path makefile
 	cp ${IN_PATHS_MK} ${OUT_PATHS_MK}
 	sed -i 's+@DIR_CPP_SRC@+${R}/src+'              ${OUT_PATHS_MK}
+	sed -i 's+@DIR_IMAGES@+${R}/images+'            ${OUT_PATHS_MK}
 	sed -i 's+@DIR_VCL_SRC@+${PATH_VCUBE}/lib/src+' ${OUT_PATHS_MK}
 	sed -i 's+@BUILD_DIR@+${DIR_OBJ}+'              ${OUT_PATHS_MK}
 # inject makefile
@@ -85,8 +88,12 @@ ${DIR_GENERATED}/Makefile: ${OUT_GENERATED} Makefile ${DIR_INJECTIONS}/*.mk | ${
 	cat "${DIR_INJECTIONS}/c_cpp_properties.template" | sed 's+@TARGET_DEF@+${TARGET_DEF}+' > ${DIR_VSCODE}/c_cpp_properties.json
 	@echo "Target define: ${TARGET_DEF}"
 
+${OUT_IMAGES}: $(shell find ${DIR_IMAGES} -maxdepth 1 -type f) ${PATH_VCUBE}/convert-images.py
+	! test -d ${DIR_IMAGES} || ${PATH_VCUBE}/convert-images.py ${DIR_IMAGES}
+	touch ${OUT_IMAGES}
+
 .SILENT: ${OUT_HEX_IMAGE}
-${OUT_HEX_IMAGE}: ${DIR_GENERATED}/Makefile | ${DIR_BIN_IMAGES} ${DIR_OBJ}
+${OUT_HEX_IMAGE}: ${DIR_GENERATED}/Makefile ${OUT_IMAGES} | ${DIR_BIN_IMAGES} ${DIR_OBJ}
 	cd ${DIR_GENERATED} && make -j
 	cp ${DIR_OBJ}/${TARGET}.hex ${OUT_HEX_IMAGE}
 
@@ -100,7 +107,7 @@ ${DIR_VSCODE}:
 	mkdir $@
 
 clean:
-	${RM} ${DIR_OBJ} ${DIR_BIN_IMAGES} ${DIR_GENERATED}/Makefile
+	${RM} ${DIR_OBJ} ${DIR_BIN_IMAGES} ${DIR_GENERATED}/Makefile ${DIR_IMAGES}/generated ${OUT_IMAGES}
 
 clean-deep: clean
 	find ${DIR_GENERATED} ! -name '${TARGET}.ioc' -type f -exec rm -f {} +

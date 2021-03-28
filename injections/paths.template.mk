@@ -5,6 +5,7 @@
 
 DIR_CPP_SRC = @DIR_CPP_SRC@
 DIR_VCL_SRC = @DIR_VCL_SRC@
+DIR_IMAGES = @DIR_IMAGES@
 BUILD_DIR = @BUILD_DIR@
 
 # end of injection ----------------------------------------------------------------------------------------------------

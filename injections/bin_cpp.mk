@@ -42,6 +42,7 @@ C_SOURCES += ${ADDITIONAL_C_SOURCES}
 
 CPP_SOURCES = $(shell find ${DIR_CPP_SRC} -name "*.cpp")
 LIB_SOURCES = $(shell find ${DIR_VCL_SRC} -name "*.cpp")
+IMG_SOURCES = $(shell find ${DIR_IMAGES} -name "*.cpp")
 
 # end of injection ----------------------------------------------------------------------------------------------------
 

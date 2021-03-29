@@ -78,11 +78,9 @@ fCpp.write(cpp_header)
 for bmp in bitmapFiles:
     print("Converting {}...".format(bmp))
 
-    image = Image.open(bmp)
-    rawData = list(image.getdata())
+    image = Image.open(bmp).convert('RGB')
 
     width, height = image.size
-
     columns = int((width + 7) / 8)
 
     data = []
@@ -91,8 +89,7 @@ for bmp in bitmapFiles:
 
     for y in range(height):
         for x in range(width):
-            index = x + y * width
-            if rawData[index] == 1:
+            if image.getpixel((x, y)) == (0, 0, 0):
                 data[int(x / 8)][y] |= (1 << (7-(x % 8)))
 
     output = []

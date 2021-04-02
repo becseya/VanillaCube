@@ -18,6 +18,32 @@ if not os.path.isdir(sourceFolder):
 
 # ---------------------------------------------------------------------------------------------------------------------
 
+def processBitmap(path):
+    image = Image.open(path).convert('RGB')
+
+    width, height = image.size
+    columns = int((width + 7) / 8)
+
+    data = []
+    for x in range(columns):
+        data.append([0 for y in range(height)])
+
+    for y in range(height):
+        for x in range(width):
+            if image.getpixel((x, y)) == (0, 0, 0):
+                data[int(x / 8)][y] |= (1 << (7-(x % 8)))
+
+    output = []
+    for y in range(height):
+        line = []
+        for x in range(columns):
+            line.append("0x%02x," % data[x][y])
+        output.append(" ".join(line))
+
+    return (width, height, " ".join(output))
+
+# ---------------------------------------------------------------------------------------------------------------------
+
 hpp_header = (
     "#pragma once\n"
     "\n"
@@ -69,43 +95,23 @@ outputFolder = sourceFolder + "/generated"
 if not os.path.exists(outputFolder):
     os.makedirs(outputFolder)
 
-fHpp = open(outputFolder + "/images.hpp", "w")
-fCpp = open(outputFolder + "/images.cpp", "w")
+iHpp = open(outputFolder + "/images.hpp", "w")
+iCpp = open(outputFolder + "/images.cpp", "w")
 
-fHpp.write(hpp_header)
-fCpp.write(cpp_header)
+iHpp.write(hpp_header)
+iCpp.write(cpp_header)
 
 for bmp in bitmapFiles:
     print("Converting {}...".format(bmp))
 
-    image = Image.open(bmp).convert('RGB')
-
-    width, height = image.size
-    columns = int((width + 7) / 8)
-
-    data = []
-    for x in range(columns):
-        data.append([0 for y in range(height)])
-
-    for y in range(height):
-        for x in range(width):
-            if image.getpixel((x, y)) == (0, 0, 0):
-                data[int(x / 8)][y] |= (1 << (7-(x % 8)))
-
-    output = []
-    for y in range(height):
-        line = []
-        for x in range(columns):
-            line.append("0x%02x," % data[x][y])
-        output.append(" ".join(line))
-
+    width, height, data_txt = processBitmap(bmp)
     name = os.path.splitext(os.path.basename(bmp))[0]
 
-    fHpp.write(hpp_body.format(name))
-    fCpp.write(cpp_body.format(name, width, height, "    "+" ".join(output)))
+    iHpp.write(hpp_body.format(name))
+    iCpp.write(cpp_body.format(name, width, height, "    " + data_txt))
 
-fHpp.write(hpp_footer)
-fCpp.write(cpp_footer)
+iHpp.write(hpp_footer)
+iCpp.write(cpp_footer)
 
-fHpp.close()
-fCpp.close()
+iHpp.close()
+iCpp.close()

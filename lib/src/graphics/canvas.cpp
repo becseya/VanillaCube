@@ -14,6 +14,15 @@ Canvas::Canvas(Bitmap& bitmap)
     , o(0, 0)
 {}
 
+Canvas::Canvas(const Canvas& c, Point p0, uint_t width, uint_t height)
+    : bitmap(c.bitmap)
+    , font(c.font)
+    , mixing(c.mixing)
+    , width(width)
+    , height(height)
+    , o(p0)
+{}
+
 uint_t Canvas::getWidth()
 {
     return width;
@@ -140,6 +149,22 @@ void Canvas::drawImage(Point p0, const Bitmap& img, Alignment alignment)
             }
         }
     }
+}
+
+void Canvas::fillRectange(Point p0, uint_t w, uint_t h, bool clear)
+{
+    const int_t x_max = Math::min<int_t>(w, width - p0.x);
+    const int_t y_max = Math::min<int_t>(h, height - p0.y);
+    p0 += o;
+
+    if (clear)
+        for (int16_t x = 0; x < x_max; x++)
+            for (int16_t y = 0; y < y_max; y++)
+                bitmap.set(false, p0.x + x, p0.y + y);
+    else
+        for (int16_t x = 0; x < x_max; x++)
+            for (int16_t y = 0; y < y_max; y++)
+                bitmap.set(true, p0.x + x, p0.y + y);
 }
 
 // --------------------------------------------------------------------------------------------------------------------

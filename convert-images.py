@@ -47,43 +47,38 @@ def processBitmap(path):
 hpp_header = (
     "#pragma once\n"
     "\n"
-    "#include <graphics/bitmap.hpp>\n"
+    "#include <graphics/{}.hpp>\n"
     "\n"
-    "namespace img {\n"
+    "// clang-format off\n"
+    "\n"
+    "namespace {} {{\n"
     "\n"
 )
 
 hpp_body = (
-    "extern const VanillaCube::Graphics::Bitmap {};\n"
-)
-
-hpp_footer =  (
-    "\n"
-    "} // namespace img\n"
+    "extern const VanillaCube::Graphics::{} {};\n"
 )
 
 cpp_header = (
-    "#include \"images.hpp\"\n"
+    "#include \"{}.hpp\"\n"
     "\n"
     "using namespace VanillaCube::Graphics;\n"
     "\n"
-    "namespace img {\n"
-    "\n"
     "// clang-format off\n"
+    "\n"
+    "namespace {} {{\n"
 )
 
-cpp_body = (
+cpp_i_body = (
     "\n"
-    "const Bitmap {} ({}, {}, (const uint8_t[]) {{\n"
+    "const {} {} ({}, {}, (const uint8_t[]) {{\n"
     "{}\n"
     "}});\n"
 )
 
-cpp_footer =  (
+footer =  (
     "\n"
-    "// clang-format on\n"
-    "\n"
-    "} // namespace img\n"
+    "}\n"
 )
 
 # ---------------------------------------------------------------------------------------------------------------------
@@ -98,8 +93,8 @@ if not os.path.exists(outputFolder):
 iHpp = open(outputFolder + "/images.hpp", "w")
 iCpp = open(outputFolder + "/images.cpp", "w")
 
-iHpp.write(hpp_header)
-iCpp.write(cpp_header)
+iHpp.write(hpp_header.format("bitmap", "img"))
+iCpp.write(cpp_header.format("images", "img"))
 
 for bmp in bitmapFiles:
     print("Converting {}...".format(bmp))
@@ -107,11 +102,11 @@ for bmp in bitmapFiles:
     width, height, data_txt = processBitmap(bmp)
     name = os.path.splitext(os.path.basename(bmp))[0]
 
-    iHpp.write(hpp_body.format(name))
-    iCpp.write(cpp_body.format(name, width, height, "    " + data_txt))
+    iHpp.write(hpp_body.format("Bitmap", name))
+    iCpp.write(cpp_i_body.format("Bitmap", name, width, height, "    " + data_txt))
 
-iHpp.write(hpp_footer)
-iCpp.write(cpp_footer)
+iHpp.write(footer)
+iCpp.write(footer)
 
 iHpp.close()
 iCpp.close()

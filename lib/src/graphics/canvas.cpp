@@ -29,6 +29,11 @@ void Canvas::setMixing(Mixing mixing)
     Canvas::mixing = mixing;
 }
 
+void Canvas::setFont(const Font& font)
+{
+    Canvas::font = &font;
+}
+
 void Canvas::clear()
 {
     if ((o == Point(0, 0)) && (width == bitmap.getWidth()) && (height == bitmap.getHeight()))
@@ -37,6 +42,34 @@ void Canvas::clear()
         for (uint_t x = 0; x < width; x++)
             for (uint_t y = 0; y < height; y++)
                 bitmap.set(false, o.x + x, o.y + y);
+}
+
+// --------------------------------------------------------------------------------------------------------------------
+
+int16_t Canvas::write(const char* str, Point p, Alignment alignment)
+{
+    if (!font)
+        return 0;
+
+    p.align(alignment, font->getStringWidth(str), font->getParams().height);
+    p += o;
+    auto x_start = p.x;
+
+    while (*str && (p.x < width)) {
+        if (*str == ' ')
+            p.x += font->getParams().spaceSize;
+        else {
+            const Bitmap img = font->getChar(*str);
+
+            if (img.getWidth() > 0) {
+                drawImage(p, img);
+                p.x += (img.getWidth() + font->getParams().hSpace);
+            }
+        }
+        str++;
+    }
+
+    return (p.x - x_start);
 }
 
 // --------------------------------------------------------------------------------------------------------------------

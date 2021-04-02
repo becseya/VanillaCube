@@ -2,6 +2,7 @@
 
 #include "../math.hpp"
 #include "bitmap.hpp"
+#include "font.hpp"
 #include "point.hpp"
 
 namespace VanillaCube {
@@ -17,8 +18,9 @@ enum class Mixing
 
 class Canvas
 {
-    Bitmap& bitmap;
-    Mixing  mixing;
+    Bitmap&     bitmap;
+    Mixing      mixing;
+    const Font* font;
 
     uint_t width;
     uint_t height;
@@ -32,6 +34,9 @@ class Canvas
 
     void clear();
     void setMixing(Mixing mixing);
+    void setFont(const Font& font);
+
+    int16_t write(const char* str, Point p0, Alignment alignment = Alignment::TopLeft);
 
     void drawLine(const Point& p0, const Point& p1);
     void drawCircle(Point p0, float r);

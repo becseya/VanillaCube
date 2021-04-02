@@ -44,6 +44,23 @@ struct Peripheral
         case Bus::APB2: LL_APB2_GRP1_DisableClock(PERIPH::clockFlag); break;
         }
     }
+
+    static bool isClockEnabled()
+    {
+        switch (PERIPH::bus) {
+        case Bus::APB1: return LL_APB1_GRP1_IsEnabledClock(PERIPH::clockFlag);
+        case Bus::AHB1: return LL_AHB1_GRP1_IsEnabledClock(PERIPH::clockFlag);
+        case Bus::APB2: return LL_APB2_GRP1_IsEnabledClock(PERIPH::clockFlag);
+        }
+
+        return false;
+    }
+
+    static void MakeSureClockIsEnabled()
+    {
+        if (!isClockEnabled())
+            enableClock();
+    }
 };
 
 } // namespace Periph

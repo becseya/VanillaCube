@@ -84,11 +84,15 @@ struct GpioPin : public Peripheral<PERIPH>
 {
     ALWAYS_INLINE static void configure(const OutputMode mode, const GpioSpeed speed = GpioSpeed::Slow)
     {
+        Peripheral<PERIPH>::MakeSureClockIsEnabled();
+
         SET_MASK(DEREF<PERIPH>(), PIN, GET_MASK(mode, speed));
     }
 
     ALWAYS_INLINE static void configure(const InputMode mode)
     {
+        Peripheral<PERIPH>::MakeSureClockIsEnabled();
+
         SET_MASK(DEREF<PERIPH>(), PIN, GET_MASK(mode));
 
         if (mode == InputMode::PullDown)
@@ -122,6 +126,9 @@ struct GpioPin : public Peripheral<PERIPH>
 template<typename PERIPH, uint32_t SIZE, uint32_t OFFSET = 0>
 class GpioPort
 {
+    static_assert(SIZE <= 16, "Max GpioPort<SIZE> is 16");
+    static_assert((SIZE + OFFSET) <= 16, "GpioPort<OFFSET> is too high");
+
     // switching between I/O modes is highly time critical, therefore we are calculating the masks in advance
     static inline port_masks_t mInput;
     static inline port_masks_t mOutput;
@@ -129,13 +136,15 @@ class GpioPort
   public:
     ALWAYS_INLINE static void write(uint32_t data)
     {
-        data &= N_ONES(SIZE);
-        DEREF<PERIPH>().BSRR = ((~data << OFFSET) << 16) | ((data << OFFSET) & 0xFF);
+        uint32_t data_cli = (~data & MASK_FOR_N_BITS(SIZE));
+        data &= MASK_FOR_N_BITS(SIZE);
+
+        DEREF<PERIPH>().BSRR = (data_cli << (OFFSET + 16)) | (data << OFFSET);
     }
 
     ALWAYS_INLINE static uint32_t read()
     {
-        return (DEREF<PERIPH>().IDR >> OFFSET) & N_ONES(SIZE);
+        return (DEREF<PERIPH>().IDR >> OFFSET) & MASK_FOR_N_BITS(SIZE);
     }
 
     ALWAYS_INLINE static void setAsOutput()
@@ -150,14 +159,26 @@ class GpioPort
 
     static void setOutputMode(const OutputMode mode, const GpioSpeed speed = GpioSpeed::Fast)
     {
+        Peripheral<PERIPH>::MakeSureClockIsEnabled();
+
         CALCULATE_MASK(mOutput, GET_MASK(mode, speed), SIZE, OFFSET);
         setAsOutput();
     }
 
     static void setInputMode(const InputMode mode)
     {
+        Peripheral<PERIPH>::MakeSureClockIsEnabled();
+
         CALCULATE_MASK(mInput, GET_MASK(mode), SIZE, OFFSET);
         setAsInput();
+    }
+
+    static void configure(const InputMode i_mode, const OutputMode o_mode, const GpioSpeed speed = GpioSpeed::Fast)
+    {
+        Peripheral<PERIPH>::MakeSureClockIsEnabled();
+
+        CALCULATE_MASK(mInput, GET_MASK(i_mode), SIZE, OFFSET);
+        CALCULATE_MASK(mOutput, GET_MASK(o_mode, speed), SIZE, OFFSET);
     }
 
   private:

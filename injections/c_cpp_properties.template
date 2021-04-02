@@ -5,6 +5,7 @@
             "includePath": [
                 "${workspaceFolder}/**",
                 "${workspaceFolder}/generated",
+                "${workspaceFolder}/images/generated",
                 "${workspaceFolder}/VanillaCube/lib/inc"
             ],
             "defines": [

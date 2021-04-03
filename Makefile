@@ -132,7 +132,7 @@ update-vanillacube:
 	${PATH_VCUBE}/install.sh
 
 edit-project:
-	${PATH_CUBE_MX} ${R}/${PROJECT_FILE}
+	${PATH_CUBE_MX} ${PROJECT_FILE}
 
 flash: all
 	${PATH_CUBE_PROG} -c port=SWD mode=UR -w ${DIR_BIN_IMAGES}/${TARGET}.hex 0x8000000 -v -rst

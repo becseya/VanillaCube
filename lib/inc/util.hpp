@@ -2,6 +2,8 @@
 
 #include "lib.h"
 
+#include <typeinfo>
+
 extern "C" void LL_mDelay(uint32_t Delay);
 
 // --------------------------------------------------------------------------------------------------------------------
@@ -23,6 +25,14 @@ ALWAYS_INLINE static void NOP()
 
 template<>
 ALWAYS_INLINE void NOP<0>(){};
+
+template<typename T>
+ALWAYS_INLINE uint32_t& ENUM_TO_UINT(T& val)
+{
+    static_assert(std::is_enum<T>::value, "T must me an enum");
+
+    return (uint32_t&)(val);
+}
 
 } // namespace Util
 } // namespace VanillaCube

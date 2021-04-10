@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../lib.h"
+#include "../util.hpp"
 
 #include <stm32f1xx_ll_bus.h>
 
@@ -8,6 +9,8 @@
 
 namespace VanillaCube {
 namespace Periph {
+
+using Util::ENUM_TO_UINT;
 
 enum class Bus
 {
@@ -25,7 +28,7 @@ struct periph_wrapper_t
 };
 
 template<typename PERIPH>
-struct Peripheral
+struct ClockControl
 {
     static void enableClock()
     {
@@ -60,6 +63,15 @@ struct Peripheral
     {
         if (!isClockEnabled())
             enableClock();
+    }
+};
+
+template<typename PERIPH, typename T>
+struct Peripheral : public ClockControl<PERIPH>
+{
+    static ALWAYS_INLINE T& CTRL_STRUCT()
+    {
+        return *static_cast<T*>(reinterpret_cast<void*>(PERIPH::controlAddr));
     }
 };
 

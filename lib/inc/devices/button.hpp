@@ -14,7 +14,7 @@ struct Button : public Timing::ClickReader
         GPIO_PIN::configure(MODE);
     }
 
-    Timing::ClickType update()
+    bool update()
     {
         if (MODE == Periph::InputMode::PullUp)
             return ClickReader::update(!GPIO_PIN::get());

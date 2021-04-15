@@ -29,7 +29,7 @@ class ClickReader
     bool      isLongCLicked() const;
     ClickType getClick() const;
 
-    ClickType update(bool signal);
+    bool update(bool signal);
 };
 
 } // namespace Timing

@@ -32,7 +32,7 @@ IN_PATHS_MK          = ${DIR_INJECTIONS}/paths.template.mk
 OUT_PATHS_MK         = ${DIR_OUTPUT}/paths.mk
 OUT_GENERATOR_SCRIPT = ${DIR_OUTPUT}/generate.script
 OUT_GENERATED        = ${DIR_OUTPUT}/.generated
-OUT_ORIGINAL         = ${DIR_OUTPUT}/.original
+OUT_SRC_INJECTED     = ${DIR_OUTPUT}/.src_injected
 OUT_HEX_IMAGE        = ${DIR_BIN_IMAGES}/${TARGET}.hex
 OUT_IMAGES           = ${DIR_OUTPUT}/.images
 
@@ -54,24 +54,12 @@ ${OUT_GENERATOR_SCRIPT}: ${IN_GENERATOR_SCRIPT} # | output folder already exsist
 ${OUT_GENERATED}: ${PROJECT_FILE} | ${OUT_GENERATOR_SCRIPT}
 	${RM} ${DIR_GENERATED}/Makefile
 	${PATH_CUBE_MX} -q ${OUT_GENERATOR_SCRIPT}
+	mv ${DIR_GENERATED}/Makefile ${DIR_GENERATED}/Makefile.original
 	touch ${OUT_GENERATED}
 
-${OUT_ORIGINAL}: ${OUT_GENERATED}
+${OUT_SRC_INJECTED}: ${OUT_GENERATED}
 	$(eval IT_FILE_NAME := $(shell basename $$(find ${DIR_GENERATED}/Inc -name *_it.h) .h))
-	mv ${DIR_GENERATED}/Makefile ${DIR_GENERATED}/Makefile.original
-	mv ${DIR_GENERATED}/Inc/main.h ${DIR_GENERATED}/Inc/main.h.original
-	mv ${DIR_GENERATED}/Src/main.c ${DIR_GENERATED}/Src/main.c.original
-	mv ${DIR_GENERATED}/Inc/${IT_FILE_NAME}.h ${DIR_GENERATED}/Inc/${IT_FILE_NAME}.h.original
-	mv ${DIR_GENERATED}/Src/${IT_FILE_NAME}.c ${DIR_GENERATED}/Src/${IT_FILE_NAME}.c.original
-	touch ${OUT_ORIGINAL}
-
-${DIR_GENERATED}/Makefile: ${OUT_ORIGINAL} Makefile ${DIR_INJECTIONS}/*.mk | ${DIR_VSCODE}
-	$(eval IT_FILE_NAME := $(shell basename $$(find ${DIR_GENERATED}/Inc -name *_it.h.original) .h.original))
 # inject main
-	cp ${DIR_GENERATED}/Inc/main.h.original ${DIR_GENERATED}/Inc/main.h
-	cp ${DIR_GENERATED}/Src/main.c.original ${DIR_GENERATED}/Src/main.c
-	cp ${DIR_GENERATED}/Inc/${IT_FILE_NAME}.h.original ${DIR_GENERATED}/Inc/${IT_FILE_NAME}.h
-	cp ${DIR_GENERATED}/Src/${IT_FILE_NAME}.c.original ${DIR_GENERATED}/Src/${IT_FILE_NAME}.c
 	sed -i '/USER CODE END EFP/a\void main_init();' ${DIR_GENERATED}/Inc/main.h
 	sed -i '/USER CODE END EFP/a\void main_loop();' ${DIR_GENERATED}/Inc/main.h
 	sed -i '/USER CODE END 2/a\  main_init();'       ${DIR_GENERATED}/Src/main.c
@@ -80,6 +68,9 @@ ${DIR_GENERATED}/Makefile: ${OUT_ORIGINAL} Makefile ${DIR_INJECTIONS}/*.mk | ${D
 	sed -i '/USER CODE END 2/a\  SysTick->CTRL |= SysTick_CTRL_TICKINT_Msk;'          ${DIR_GENERATED}/Src/main.c
 	sed -i '/USER CODE END EM/a\volatile uint64_t __vanillacube_systick_counter = 0;' ${DIR_GENERATED}/Inc/${IT_FILE_NAME}.h
 	sed -i '/USER CODE END SysTick_IRQn 0/a\  __vanillacube_systick_counter++;'       ${DIR_GENERATED}/Src/${IT_FILE_NAME}.c
+	touch ${OUT_SRC_INJECTED}
+
+${DIR_GENERATED}/Makefile: ${OUT_SRC_INJECTED} Makefile ${DIR_INJECTIONS}/*.mk | ${DIR_VSCODE}
 # prepare path makefile
 	cp ${IN_PATHS_MK} ${OUT_PATHS_MK}
 	sed -i 's+@DIR_CPP_SRC@+${R}/src+'              ${OUT_PATHS_MK}

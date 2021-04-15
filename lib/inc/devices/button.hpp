@@ -9,7 +9,7 @@ namespace Devices {
 template<typename GPIO_PIN, Periph::InputMode MODE>
 struct Button : public Timing::ClickReader
 {
-    void configure()
+    static void configure()
     {
         GPIO_PIN::configure(MODE);
     }

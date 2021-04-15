@@ -10,7 +10,7 @@ namespace Devices {
 template<typename GPIO_PIN, typename TIMER_CH, bool INVERT_POLARITY = false>
 struct Buzzer : public Timing::Pulser
 {
-    void configure()
+    static void configure()
     {
         TIMER_CH::startOc(getInactiveMode());
         GPIO_PIN::configure(Periph::OutputMode::AltFuncPP);

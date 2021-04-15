@@ -3,6 +3,7 @@
 #include "../periph/gpio.hpp"
 #include "../periph/timer.hpp"
 #include "../timing/pulser.hpp"
+#include "../util.hpp"
 
 namespace VanillaCube {
 namespace Devices {
@@ -14,6 +15,13 @@ struct Buzzer : public Timing::Pulser
     {
         TIMER_CH::startOc(getInactiveMode());
         GPIO_PIN::configure(Periph::OutputMode::AltFuncPP);
+    }
+
+    static void beepSingleBlocking(uint32_t pulse_width)
+    {
+        TIMER_CH::setOcMode(Periph::TimerOcMode::Toggle);
+        Util::DelayMs(pulse_width);
+        TIMER_CH::setOcMode(getInactiveMode());
     }
 
   private:

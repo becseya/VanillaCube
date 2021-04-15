@@ -7,6 +7,8 @@ OBJECTS += $(subst ${DIR_IMAGES},${BUILD_DIR}/img,${IMG_SOURCES:.cpp=.cpp.o})
 
 CPPFLAGS = ${CFLAGS} -std=c++17 -fno-rtti -fno-exceptions -specs=nosys.specs -Wno-register
 
+LDFLAGS += -u _printf_float
+
 ${BUILD_DIR}/src/%.cpp.o: ${DIR_CPP_SRC}/%.cpp Makefile | ${BUILD_DIR}
 	mkdir -p $(@D)
 	${PP} -c ${CPPFLAGS} -Wa,-a,-ad,-alms=$@.lst $< -o $@

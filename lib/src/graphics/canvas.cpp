@@ -62,7 +62,6 @@ int16_t Canvas::write(const char* str, Point p, Alignment alignment)
         return 0;
 
     p.align(alignment, font->getStringWidth(str), font->getParams().height);
-    p += o;
     auto x_start = p.x;
 
     while (*str && (p.x < width)) {
@@ -122,8 +121,8 @@ void Canvas::drawCircle(Point p0, float r)
 
 void Canvas::drawImage(Point p0, const Bitmap& img, Alignment alignment)
 {
-    const int_t x_max = (Math::min<int_t>(img.getWidth(), width - o.x) - 1);
-    const int_t y_max = (Math::min<int_t>(img.getHeight(), height - o.y) - 1);
+    const int_t x_max = Math::min<int_t>(img.getWidth() - 1, width - p0.x);
+    const int_t y_max = Math::min<int_t>(img.getHeight() - 1, height - p0.y);
 
     p0.align(alignment, img.getWidth(), img.getHeight());
     p0 += o;
@@ -190,7 +189,7 @@ void Canvas::drawLineByY(Point p, int_t dy, float m)
 
 void Canvas::drawPoint(int_t x, int_t y)
 {
-    if ((x < 0) || (y < 0) || (x >= width) || (y >= height))
+    if ((x < 0) || (y < 0) || ((x - o.x) >= width) || ((y - o.y) >= height))
         return;
 
     switch (mixing) {

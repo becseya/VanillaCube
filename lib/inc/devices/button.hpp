@@ -9,12 +9,12 @@ namespace Devices {
 template<typename GPIO_PIN, Periph::InputMode MODE>
 struct Button : public Timing::ClickReader
 {
-    void configure()
+    static void configure()
     {
         GPIO_PIN::configure(MODE);
     }
 
-    Timing::ClickType update()
+    bool update()
     {
         if (MODE == Periph::InputMode::PullUp)
             return ClickReader::update(!GPIO_PIN::get());

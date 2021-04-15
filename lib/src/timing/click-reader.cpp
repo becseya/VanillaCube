@@ -26,7 +26,7 @@ bool ClickReader::isLongCLicked() const
     return longClicked;
 }
 
-ClickType ClickReader::update(bool signal)
+bool ClickReader::update(bool signal)
 {
     click = ClickType::None; // return different only on state change
 
@@ -49,5 +49,5 @@ ClickType ClickReader::update(bool signal)
     }
 
     signalPrev = signal;
-    return click;
+    return (signal || (click == ClickType::Short));
 }

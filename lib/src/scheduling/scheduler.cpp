@@ -10,9 +10,19 @@ Scheduler::Scheduler(const tasks_t& tasks)
     : tasks(tasks)
 {}
 
-float Scheduler::getCpuLoad()
+float Scheduler::getCpuLoad() const
 {
     return cpuLoad;
+}
+
+size_t Scheduler::getNumberOfTasks() const
+{
+    return tasks.size;
+}
+
+const Task::info_t& Scheduler::getTaskInfo(size_t idx) const
+{
+    return tasks[idx]->getInfo();
 }
 
 void Scheduler::iterate()

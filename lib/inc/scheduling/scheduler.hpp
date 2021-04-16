@@ -20,9 +20,13 @@ class Scheduler
   public:
     Scheduler(const tasks_t& tasks);
 
-    void  iterate();
-    float getCpuLoad();
+    void iterate();
 
+    float               getCpuLoad() const;
+    size_t              getNumberOfTasks() const;
+    const Task::info_t& getTaskInfo(size_t idx) const;
+
+  protected:
     virtual Task* getTaskToExecute() = 0;
 
   private:

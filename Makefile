@@ -27,14 +27,18 @@ DIR_INJECTIONS       = ${PATH_VCUBE}/injections
 DIR_VSCODE           = ${R}/.vscode
 
 IN_GENERATOR_SCRIPT  = ${DIR_INJECTIONS}/generate.template
-IN_PATHS_MK          = ${DIR_INJECTIONS}/paths.template.mk
 
-OUT_PATHS_MK         = ${DIR_OUTPUT}/paths.mk
 OUT_GENERATOR_SCRIPT = ${DIR_OUTPUT}/generate.script
 OUT_GENERATED        = ${DIR_OUTPUT}/.generated
 OUT_SRC_INJECTED     = ${DIR_OUTPUT}/.src_injected
 OUT_HEX_IMAGE        = ${DIR_BIN_IMAGES}/${TARGET}.hex
 OUT_IMAGES           = ${DIR_OUTPUT}/.images
+
+# these variables are passed down to second Makefile
+export DIR_CPP_SRC   = ${R}/src
+export DIR_IMAGES    = ${R}/images
+export DIR_VCL_SRC   = ${PATH_VCUBE}/lib/src
+export BUILD_DIR     = ${DIR_OBJ}
 
 RM = rm -Rf
 
@@ -71,12 +75,6 @@ ${OUT_SRC_INJECTED}: ${OUT_GENERATED}
 	touch ${OUT_SRC_INJECTED}
 
 ${DIR_GENERATED}/Makefile: ${OUT_SRC_INJECTED} Makefile ${DIR_INJECTIONS}/*.mk | ${DIR_VSCODE}
-# prepare path makefile
-	cp ${IN_PATHS_MK} ${OUT_PATHS_MK}
-	sed -i 's+@DIR_CPP_SRC@+${R}/src+'              ${OUT_PATHS_MK}
-	sed -i 's+@DIR_IMAGES@+${R}/images+'            ${OUT_PATHS_MK}
-	sed -i 's+@DIR_VCL_SRC@+${PATH_VCUBE}/lib/src+' ${OUT_PATHS_MK}
-	sed -i 's+@BUILD_DIR@+${DIR_OBJ}+'              ${OUT_PATHS_MK}
 # inject makefile
 	cp ${DIR_GENERATED}/Makefile.original ${DIR_GENERATED}/Makefile
 	sed -i '/# paths/,/# source/c\___PATHS___'                  ${DIR_GENERATED}/Makefile
@@ -84,7 +82,7 @@ ${DIR_GENERATED}/Makefile: ${OUT_SRC_INJECTED} Makefile ${DIR_INJECTIONS}/*.mk |
 	sed -i '/vpath %.s/a\___COMPILE___'                         ${DIR_GENERATED}/Makefile
 	sed -i '/C_INCLUDES =/a\-I${PATH_VCUBE}/lib/inc \\'         ${DIR_GENERATED}/Makefile
 	sed -i '/# dependencies/,/# \*\+ EOF/c\___DEPENDENCY___'    ${DIR_GENERATED}/Makefile
-	sed -i -e '/___PATHS___/{r ${OUT_PATHS_MK}' -e 'd}'                            ${DIR_GENERATED}/Makefile
+	sed -i -e '/___PATHS___/{r ${DIR_INJECTIONS}/path_info.mk' -e 'd}'             ${DIR_GENERATED}/Makefile
 	sed -i -e '/___BIN_AND_CPP_SOURCES___/{r ${DIR_INJECTIONS}/bin_cpp.mk' -e 'd}' ${DIR_GENERATED}/Makefile
 	sed -i -e '/___COMPILE___/{r ${DIR_INJECTIONS}/compile.mk' -e 'd}'             ${DIR_GENERATED}/Makefile
 	sed -i -e '/___DEPENDENCY___/{r ${DIR_INJECTIONS}/dependency.mk' -e 'd}'       ${DIR_GENERATED}/Makefile

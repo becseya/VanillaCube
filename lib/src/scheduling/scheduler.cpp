@@ -17,7 +17,7 @@ float Scheduler::getCpuLoad() const
 
 size_t Scheduler::getNumberOfTasks() const
 {
-    return tasks.size;
+    return tasks.size();
 }
 
 const Task::info_t& Scheduler::getTaskInfo(size_t idx) const
@@ -45,7 +45,7 @@ void Scheduler::updateCpuLoad()
     if (d_tick > LOAD_CHECK_TICKS) {
         uint64_t runtime_sum = 0;
 
-        for (size_t i = 0; i < tasks.size; i++)
+        for (size_t i = 0; i < tasks.size(); i++)
             runtime_sum += tasks[i]->getInfo().runTime;
 
         cpuLoad         = (float)(runtime_sum - last_sum) / d_tick;

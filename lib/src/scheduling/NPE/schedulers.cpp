@@ -13,7 +13,7 @@ Task* FixedPriorityScheduler::getTaskToExecute()
 {
     Task* candinde = nullptr;
 
-    for (size_t i = 0; i < tasks.size; i++) {
+    for (size_t i = 0; i < tasks.size(); i++) {
         if (tasks[i]->isReady() && (!candinde || tasks[i]->isHigherPriority(*candinde)))
             candinde = tasks[i];
     }

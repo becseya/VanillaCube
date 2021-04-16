@@ -21,6 +21,8 @@ TARGET = $(shell cat ${PROJECT_FILE} | grep -Po '(?<=ProjectManager.ProjectName=
 
 # ---------------------------------------------------------------------------------------------------------------------
 
+VERSION              = ${shell git describe}
+
 DIR_OBJ              = ${DIR_OUTPUT}/obj
 DIR_BIN_IMAGES       = ${DIR_OUTPUT}/images
 DIR_INJECTIONS       = ${PATH_VCUBE}/injections
@@ -36,19 +38,46 @@ OUT_IMAGES           = ${DIR_OUTPUT}/.images
 
 # ---------------------------------------------------------------------------------------------------------------------
 
+ifndef BUILD_CONFIG
+BUILD_CONFIG = 0
+endif
+
+ifeq (${BUILD_CONFIG}, 0)
+BUILD_CONFIG_TXT = debug
+OPT              = -Og
+DEBUG            = 1
+else ifeq (${BUILD_CONFIG}, 1)
+BUILD_CONFIG_TXT = release
+OPT              = -O3
+C_FLAGS          = -DNDEBUG
+else
+$(error Unknown build config')
+endif
+
+# macros
+C_FLAGS +=  \
+-DBUILD_CONFIG=${BUILD_CONFIG} \
+'-DVERSION_TXT="${VERSION}"' \
+'-DBUILD_CONFIG_TXT="${BUILD_CONFIG_TXT}"' \
+'-DBUILD_DATE_TXT="$(shell date +'%Y-%m-%d %H:%M')"' \
+
+AS_FLAGS  =
+CPP_FLAGS = -std=c++17 -fno-rtti -fno-exceptions -specs=nosys.specs -Wno-register
+LD_FLAGS  = -u _printf_float
+
 # these variables are passed down to second Makefile
 export DIR_CPP_SRC   = ${R}/src
 export DIR_IMAGES    = ${R}/images
 export DIR_VCL_SRC   = ${PATH_VCUBE}/lib/src
 export BUILD_DIR     = ${DIR_OBJ}
 
-export EXT_AS_FLAGS  =
-export EXT_C_FLAGS   =
-export EXT_CPP_FLAGS = -std=c++17 -fno-rtti -fno-exceptions -specs=nosys.specs -Wno-register
-export EXT_LD_FLAGS  = -u _printf_float
+export EXT_AS_FLAGS  = ${AS_FLAGS}
+export EXT_C_FLAGS   = ${C_FLAGS}
+export EXT_CPP_FLAGS = ${CPP_FLAGS}
+export EXT_LD_FLAGS  = ${LD_FLAGS}
 
-export DEBUG         = 1
-export OPT           = -Og
+export DEBUG
+export OPT
 
 # ---------------------------------------------------------------------------------------------------------------------
 

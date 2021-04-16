@@ -95,6 +95,10 @@ copy_or_link "cp" ".gitignore"
 copy_or_link "cp" ".clang-format"
 copy_or_link "ln -s -r" "Makefile"
 
+# version control
+! git describe > /dev/null 2>&1 &&
+    git tag 0.0.0 --message='Welcome to VanillaCube'
+
 # hello world
 DIR_SRC="$R/src"
 ! test -d "$DIR_SRC" &&

@@ -24,14 +24,19 @@ Canvas::Canvas(const Canvas& c, Point p0, uint_t width, uint_t height)
     , o(p0)
 {}
 
-uint_t Canvas::getWidth()
+uint_t Canvas::getWidth() const
 {
     return width;
 }
 
-uint_t Canvas::getHeight()
+uint_t Canvas::getHeight() const
 {
     return height;
+}
+
+const Font& Canvas::getFont() const
+{
+    return *font;
 }
 
 void Canvas::setMixing(Mixing mixing)
@@ -56,7 +61,7 @@ void Canvas::clear()
 
 // --------------------------------------------------------------------------------------------------------------------
 
-int16_t Canvas::write(const char* str, Point p, Alignment alignment)
+int_t Canvas::write(const char* str, Point p, Alignment alignment)
 {
     if (!font)
         return 0;

@@ -6,6 +6,13 @@ using namespace VanillaCube::Scheduling;
 
 // --------------------------------------------------------------------------------------------------------------------
 
+float TaskInfo::getAverageRuntime() const
+{
+    return (float)runTime / runCntr;
+}
+
+// --------------------------------------------------------------------------------------------------------------------
+
 Task::Task(const char* name, unsigned priority, loop_function_t loop_function)
     : fLoop(loop_function)
     , priority(priority)
@@ -17,7 +24,7 @@ unsigned Task::getPriority() const
     return priority;
 }
 
-const Task::info_t& Task::getInfo() const
+const TaskInfo& Task::getInfo() const
 {
     return info;
 }

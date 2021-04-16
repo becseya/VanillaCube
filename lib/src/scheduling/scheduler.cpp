@@ -20,7 +20,7 @@ size_t Scheduler::getNumberOfTasks() const
     return tasks.size();
 }
 
-const Task::info_t& Scheduler::getTaskInfo(size_t idx) const
+const TaskInfo& Scheduler::getTaskInfo(size_t idx) const
 {
     return tasks[idx]->getInfo();
 }

@@ -23,8 +23,8 @@ struct PeriodicTask : public Task, public Timing::PeriodicTimer
 
 class DependentTask : public Task
 {
-    Task&             taskToDependOn;
-    info_t::counter_t lastCounter;
+    Task&               taskToDependOn;
+    TaskInfo::counter_t lastCounter;
 
   public:
     DependentTask(const char* name, unsigned priority, Task& parent_task, loop_function_t loop_function);

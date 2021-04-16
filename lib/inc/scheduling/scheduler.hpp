@@ -22,9 +22,9 @@ class Scheduler
 
     void iterate();
 
-    float               getCpuLoad() const;
-    size_t              getNumberOfTasks() const;
-    const Task::info_t& getTaskInfo(size_t idx) const;
+    float           getCpuLoad() const;
+    size_t          getNumberOfTasks() const;
+    const TaskInfo& getTaskInfo(size_t idx) const;
 
   protected:
     virtual Task* getTaskToExecute() = 0;

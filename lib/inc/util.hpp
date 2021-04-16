@@ -34,5 +34,13 @@ ALWAYS_INLINE uint32_t& ENUM_TO_UINT(T& val)
     return (uint32_t&)(val);
 }
 
+ALWAYS_INLINE uint32_t getSerial()
+{
+    uint32_t tmp = LL_GetUID_Word0();
+    tmp ^= LL_GetUID_Word1();
+    tmp ^= LL_GetUID_Word2();
+    return tmp;
+}
+
 } // namespace Util
 } // namespace VanillaCube

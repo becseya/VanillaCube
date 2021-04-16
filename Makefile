@@ -34,11 +34,23 @@ OUT_SRC_INJECTED     = ${DIR_OUTPUT}/.src_injected
 OUT_HEX_IMAGE        = ${DIR_BIN_IMAGES}/${TARGET}.hex
 OUT_IMAGES           = ${DIR_OUTPUT}/.images
 
+# ---------------------------------------------------------------------------------------------------------------------
+
 # these variables are passed down to second Makefile
 export DIR_CPP_SRC   = ${R}/src
 export DIR_IMAGES    = ${R}/images
 export DIR_VCL_SRC   = ${PATH_VCUBE}/lib/src
 export BUILD_DIR     = ${DIR_OBJ}
+
+export EXT_AS_FLAGS  =
+export EXT_C_FLAGS   =
+export EXT_CPP_FLAGS = -std=c++17 -fno-rtti -fno-exceptions -specs=nosys.specs -Wno-register
+export EXT_LD_FLAGS  = -u _printf_float
+
+export DEBUG         = 1
+export OPT           = -Og
+
+# ---------------------------------------------------------------------------------------------------------------------
 
 RM = rm -Rf
 
@@ -77,7 +89,7 @@ ${OUT_SRC_INJECTED}: ${OUT_GENERATED}
 ${DIR_GENERATED}/Makefile: ${OUT_SRC_INJECTED} Makefile ${DIR_INJECTIONS}/*.mk | ${DIR_VSCODE}
 # inject makefile
 	cp ${DIR_GENERATED}/Makefile.original ${DIR_GENERATED}/Makefile
-	sed -i '/# paths/,/# source/c\___PATHS___'                  ${DIR_GENERATED}/Makefile
+	sed -i '/# building variables/,/# source/c\___PATHS___'     ${DIR_GENERATED}/Makefile
 	sed -i '/# binaries/,/# CFLAGS/c\___BIN_AND_CPP_SOURCES___' ${DIR_GENERATED}/Makefile
 	sed -i '/vpath %.s/a\___COMPILE___'                         ${DIR_GENERATED}/Makefile
 	sed -i '/C_INCLUDES =/a\-I${PATH_VCUBE}/lib/inc \\'         ${DIR_GENERATED}/Makefile

@@ -10,6 +10,13 @@
 # DIR_VCL_SRC
 # BUILD_DIR
 
+# EXT_AS_FLAGS
+# EXT_C_FLAGS
+# EXT_CPP_FLAGS
+# EXT_LD_FLAGS
+
+# DEBUG
+# OPT
 
 # end of injection ----------------------------------------------------------------------------------------------------
 

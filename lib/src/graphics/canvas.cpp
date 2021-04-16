@@ -121,10 +121,11 @@ void Canvas::drawCircle(Point p0, float r)
 
 void Canvas::drawImage(Point p0, const Bitmap& img, Alignment alignment)
 {
+    p0.align(alignment, img.getWidth(), img.getHeight());
+
     const int_t x_max = Math::min<int_t>(img.getWidth() - 1, width - p0.x);
     const int_t y_max = Math::min<int_t>(img.getHeight() - 1, height - p0.y);
 
-    p0.align(alignment, img.getWidth(), img.getHeight());
     p0 += o;
 
     for (int16_t x = 0; x <= x_max; x++) {

@@ -28,6 +28,7 @@ DIR_BIN_IMAGES       = ${DIR_OUTPUT}/images
 DIR_INJECTIONS       = ${PATH_VCUBE}/injections
 DIR_VSCODE           = ${R}/.vscode
 
+IN_BUILD_CONFIG      = ${R}/build.conf.mk
 IN_GENERATOR_SCRIPT  = ${DIR_INJECTIONS}/generate.template
 
 OUT_GENERATOR_SCRIPT = ${DIR_OUTPUT}/generate.script
@@ -55,6 +56,7 @@ all: ${OUT_HEX_IMAGE}
 Makefile: ;
 ${PROJECT_FILE}: ;
 ${IN_GENERATOR_SCRIPT}: ;
+${IN_BUILD_CONFIG}: ;
 
 # ---------------------------------------------------------------------------------------------------------------------
 
@@ -62,29 +64,11 @@ ifndef BUILD_CONFIG
 BUILD_CONFIG = 0
 endif
 
-ifeq (${BUILD_CONFIG}, 0)
-BUILD_CONFIG_TXT = debug
-OPT              = -Og
-DEBUG            = 1
-C_FLAGS          = -g -gdwarf-2
-else ifeq (${BUILD_CONFIG}, 1)
-BUILD_CONFIG_TXT = release
-OPT              = -O3
-C_FLAGS          = -DNDEBUG
-else
-$(error Unknown build config')
+ifeq (,$(wildcard ${IN_BUILD_CONFIG}))
+$(error Buiild config is missing. Run 'VanillaCube/install.sh')
 endif
 
-# macros
-C_FLAGS +=  \
--DBUILD_CONFIG=${BUILD_CONFIG} \
-'-DVERSION_TXT="${VERSION}"' \
-'-DBUILD_CONFIG_TXT="${BUILD_CONFIG_TXT}"' \
-'-DBUILD_DATE_TXT="$(shell date +'%Y-%m-%d %H:%M')"' \
-
-AS_FLAGS  =
-CPP_FLAGS = -std=c++17 -fno-rtti -fno-exceptions -specs=nosys.specs -Wno-register
-LD_FLAGS  = -u _printf_float
+include ${IN_BUILD_CONFIG}
 
 # these variables are passed down to second Makefile
 export DIR_CPP_SRC   = ${R}/src
@@ -129,7 +113,7 @@ ${OUT_SRC_INJECTED}: ${OUT_GENERATED}
 	sed -i '/USER CODE END SysTick_IRQn 0/a\  __vanillacube_systick_counter++;'       ${DIR_GENERATED}/Src/${IT_FILE_NAME}.c
 	touch ${OUT_SRC_INJECTED}
 
-${DIR_GENERATED}/Makefile: ${OUT_SRC_INJECTED} Makefile ${DIR_INJECTIONS}/*.mk | ${DIR_VSCODE}
+${DIR_GENERATED}/Makefile: ${OUT_SRC_INJECTED} Makefile ${IN_BUILD_CONFIG} ${DIR_INJECTIONS}/*.mk | ${DIR_VSCODE}
 # inject makefile
 	cp ${DIR_GENERATED}/Makefile.original ${DIR_GENERATED}/Makefile
 	sed -i '/# building variables/,/# source/c\___PATHS___'     ${DIR_GENERATED}/Makefile

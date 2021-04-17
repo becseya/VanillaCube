@@ -49,7 +49,9 @@ LAST_BUILD_CONFIG    = $(shell (test -f ${OUT_BUILD_CONFIG} && cat ${OUT_BUILD_C
 
 # ---------------------------------------------------------------------------------------------------------------------
 
-RM = rm -Rf
+RM                   = rm -Rf
+STYLER_DO            = find ${R}/src -name "*.hpp" -o -name "*.cpp" | xargs clang-format -i
+STYLER_OK            = ${STYLER_DO} --dry-run -Werror
 
 .PHONY: all clean clean-deep clean-purge ${OUT_HEX_IMAGE}
 
@@ -145,7 +147,7 @@ ${OUT_IMAGES}: $(shell find ${DIR_IMAGES} -maxdepth 1 -type f) ${PATH_VCUBE}/con
 	touch ${OUT_IMAGES}
 
 .SILENT: ${OUT_HEX_IMAGE}
-${OUT_HEX_IMAGE}: bconf-eq-last ${DIR_GENERATED}/Makefile ${OUT_IMAGES} | ${DIR_BIN_IMAGES} ${DIR_OBJ}
+${OUT_HEX_IMAGE}: dynamic-dependencies ${DIR_GENERATED}/Makefile ${OUT_IMAGES} | ${DIR_BIN_IMAGES} ${DIR_OBJ}
 	cd ${DIR_GENERATED} && make -j
 	cp ${DIR_OBJ}/${TARGET}.hex ${OUT_HEX_IMAGE}
 	$(call display_info)
@@ -153,6 +155,12 @@ ${OUT_HEX_IMAGE}: bconf-eq-last ${DIR_GENERATED}/Makefile ${OUT_IMAGES} | ${DIR_
 # rebuild dependencies
 f-rebuild: ${REBUILD_FLAG_FILES}
 bconf-eq-last: $(shell test ${LAST_BUILD_CONFIG} = ${BUILD_CONFIG} || echo -n "clean-soft f-rebuild")
+
+# style checking
+style-ok: $(shell ${STYLER_OK} > /dev/null 2>&1 || echo -n "format-all")
+
+# dependencies determined before exceution
+dynamic-dependencies: bconf-eq-last style-ok
 
 ${DIR_OBJ}:
 	mkdir $@
@@ -197,8 +205,7 @@ clean-purge: clean-deep
 .PHONY: format-all update-vanillacube edit-project flash flash-rst
 
 format-all:
-	find . -name "*.hpp" | xargs clang-format -i
-	find . -name "*.cpp" | xargs clang-format -i
+	${STYLER_DO}
 
 update-vanillacube:
 	git -C ${PATH_VCUBE} checkout master

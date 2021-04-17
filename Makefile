@@ -87,6 +87,14 @@ export OPT
 
 # ---------------------------------------------------------------------------------------------------------------------
 
+define display_info
+	@printf "\n\n"
+	@echo "Git: ${GIT_DESCRIBE} at branch ${GIT_BRANCH}"
+	@echo "Build config: ${BUILD_CONFIG_TXT}"
+	$(shell test -n "$$(git status -s)" && echo '@echo ""; echo "WARNING: Uncommited changes !"')
+	@printf "\n *** Finished successfully! *** \n"
+endef
+
 # Output folder already exsists, we never have to depend on it. (See: include ${MK_ENV})
 
 ${OUT_BUILD_CONFIG}:
@@ -140,7 +148,7 @@ ${OUT_IMAGES}: $(shell find ${DIR_IMAGES} -maxdepth 1 -type f) ${PATH_VCUBE}/con
 ${OUT_HEX_IMAGE}: bconf-eq-last ${DIR_GENERATED}/Makefile ${OUT_IMAGES} | ${DIR_BIN_IMAGES} ${DIR_OBJ}
 	cd ${DIR_GENERATED} && make -j
 	cp ${DIR_OBJ}/${TARGET}.hex ${OUT_HEX_IMAGE}
-	@echo "Build config: ${BUILD_CONFIG_TXT}"
+	$(call display_info)
 
 # rebuild dependencies
 f-rebuild: ${REBUILD_FLAG_FILES}

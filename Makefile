@@ -21,7 +21,9 @@ TARGET = $(shell cat ${PROJECT_FILE} | grep -Po '(?<=ProjectManager.ProjectName=
 
 # ---------------------------------------------------------------------------------------------------------------------
 
-VERSION              = ${shell git describe}
+GIT_DESCRIBE         = $(shell git describe --dirty)
+GIT_BRANCH           = $(shell git branch --show-current)
+DATE                 = $(shell date -u +'%Y-%m-%d %H:%M:%S %Z')
 
 DIR_OBJ              = ${DIR_OUTPUT}/obj
 DIR_BIN_IMAGES       = ${DIR_OUTPUT}/images

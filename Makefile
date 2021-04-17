@@ -46,6 +46,18 @@ LAST_BUILD_CONFIG    = $(shell (test -f ${OUT_BUILD_CONFIG} && cat ${OUT_BUILD_C
 
 # ---------------------------------------------------------------------------------------------------------------------
 
+RM = rm -Rf
+
+.PHONY: all clean clean-deep clean-purge ${OUT_HEX_IMAGE}
+
+all: ${OUT_HEX_IMAGE}
+
+Makefile: ;
+${PROJECT_FILE}: ;
+${IN_GENERATOR_SCRIPT}: ;
+
+# ---------------------------------------------------------------------------------------------------------------------
+
 ifndef BUILD_CONFIG
 BUILD_CONFIG = 0
 endif
@@ -86,18 +98,6 @@ export EXT_CPP_FLAGS = ${CPP_FLAGS}
 export EXT_LD_FLAGS  = ${LD_FLAGS}
 
 export OPT
-
-# ---------------------------------------------------------------------------------------------------------------------
-
-RM = rm -Rf
-
-.PHONY: all clean clean-deep clean-purge ${OUT_HEX_IMAGE}
-
-all: ${OUT_HEX_IMAGE}
-
-Makefile: ;
-${PROJECT_FILE}: ;
-${IN_GENERATOR_SCRIPT}: ;
 
 # ---------------------------------------------------------------------------------------------------------------------
 

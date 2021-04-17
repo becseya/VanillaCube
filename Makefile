@@ -35,6 +35,14 @@ OUT_GENERATED        = ${DIR_OUTPUT}/.generated
 OUT_SRC_INJECTED     = ${DIR_OUTPUT}/.src_injected
 OUT_HEX_IMAGE        = ${DIR_BIN_IMAGES}/${TARGET}.hex
 OUT_IMAGES           = ${DIR_OUTPUT}/.images
+OUT_BUILD_CONFIG     = ${DIR_OUTPUT}/.build-config
+
+# ---------------------------------------------------------------------------------------------------------------------
+
+# must rebuild, if these files's content change
+REBUILD_FLAG_FILES   = ${OUT_BUILD_CONFIG}
+
+LAST_BUILD_CONFIG    = $(shell (test -f ${OUT_BUILD_CONFIG} && cat ${OUT_BUILD_CONFIG}) || echo -n "-1")
 
 # ---------------------------------------------------------------------------------------------------------------------
 
@@ -93,7 +101,13 @@ ${IN_GENERATOR_SCRIPT}: ;
 
 # ---------------------------------------------------------------------------------------------------------------------
 
-${OUT_GENERATOR_SCRIPT}: ${IN_GENERATOR_SCRIPT} # | output folder already exsists
+# Output folder already exsists, we never have to depend on it. (See: include ${MK_ENV})
+
+${OUT_BUILD_CONFIG}:
+	echo -n ${BUILD_CONFIG} > ${OUT_BUILD_CONFIG}
+	$(eval LAST_BUILD_CONFIG := ${BUILD_CONFIG})
+
+${OUT_GENERATOR_SCRIPT}: ${IN_GENERATOR_SCRIPT}
 	cat ${IN_GENERATOR_SCRIPT} | sed 's+@IOC_PATH@+${PROJECT_FILE}+' > ${OUT_GENERATOR_SCRIPT}
 
 ${OUT_GENERATED}: ${PROJECT_FILE} | ${OUT_GENERATOR_SCRIPT}
@@ -137,9 +151,14 @@ ${OUT_IMAGES}: $(shell find ${DIR_IMAGES} -maxdepth 1 -type f) ${PATH_VCUBE}/con
 	touch ${OUT_IMAGES}
 
 .SILENT: ${OUT_HEX_IMAGE}
-${OUT_HEX_IMAGE}: ${DIR_GENERATED}/Makefile ${OUT_IMAGES} | ${DIR_BIN_IMAGES} ${DIR_OBJ}
+${OUT_HEX_IMAGE}: bconf-eq-last ${DIR_GENERATED}/Makefile ${OUT_IMAGES} | ${DIR_BIN_IMAGES} ${DIR_OBJ}
 	cd ${DIR_GENERATED} && make -j
 	cp ${DIR_OBJ}/${TARGET}.hex ${OUT_HEX_IMAGE}
+	@echo "Build config: ${BUILD_CONFIG_TXT}"
+
+# rebuild dependencies
+f-rebuild: ${REBUILD_FLAG_FILES}
+bconf-eq-last: $(shell test ${LAST_BUILD_CONFIG} = ${BUILD_CONFIG} || echo -n "clean-soft f-rebuild")
 
 ${DIR_OBJ}:
 	mkdir $@
@@ -150,15 +169,32 @@ ${DIR_BIN_IMAGES}:
 ${DIR_VSCODE}:
 	mkdir $@
 
-clean:
-	${RM} ${DIR_OBJ} ${DIR_BIN_IMAGES} ${DIR_GENERATED}/Makefile ${DIR_IMAGES}/generated ${OUT_IMAGES}
+
+clean-soft:
+	@echo "Reseting rebuild flags..."
+# build control files
+	${RM} ${REBUILD_FLAG_FILES}
+# binaries
+	${RM} ${DIR_OBJ}
+
+clean: clean-soft
+	@echo "Cleaning..."
+# build control files
+	${RM} ${DIR_GENERATED}/Makefile ${OUT_IMAGES}
+# binaries
+	${RM} ${DIR_BIN_IMAGES} ${DIR_IMAGES}/generated
 
 clean-deep: clean
-	find ${DIR_GENERATED} ! -name '${TARGET}.ioc' -type f -exec rm -f {} +
+	@echo "Deep cleaning..."
+# build control files
+	${RM} ${OUT_GENERATED}
+# binaries
+	find ${DIR_GENERATED} ! -name '${TARGET}.ioc' -type f -exec ${RM} {} +
 	find ${DIR_GENERATED} -type d -empty -delete
-	${RM} ${OUT_GENERATED} ${OUT_GENERATOR_SCRIPT}
+	${RM} ${OUT_GENERATOR_SCRIPT}
 
 clean-purge: clean-deep
+	@echo "Purging..."
 	${RM} ${DIR_OUTPUT}
 	${PATH_VCUBE}/install.sh
 

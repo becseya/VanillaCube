@@ -46,6 +46,7 @@ ifeq (${BUILD_CONFIG}, 0)
 BUILD_CONFIG_TXT = debug
 OPT              = -Og
 DEBUG            = 1
+C_FLAGS          = -g -gdwarf-2
 else ifeq (${BUILD_CONFIG}, 1)
 BUILD_CONFIG_TXT = release
 OPT              = -O3
@@ -76,7 +77,6 @@ export EXT_C_FLAGS   = ${C_FLAGS}
 export EXT_CPP_FLAGS = ${CPP_FLAGS}
 export EXT_LD_FLAGS  = ${LD_FLAGS}
 
-export DEBUG
 export OPT
 
 # ---------------------------------------------------------------------------------------------------------------------

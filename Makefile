@@ -39,13 +39,15 @@ OUT_SRC_INJECTED     = ${DIR_OUTPUT}/.src_injected
 OUT_HEX_IMAGE        = ${DIR_BIN_IMAGES}/${TARGET}.hex
 OUT_IMAGES           = ${DIR_OUTPUT}/.images
 OUT_BUILD_CONFIG     = ${DIR_OUTPUT}/.build-config
+OUT_GIT_DESCRIBE     = ${DIR_OUTPUT}/.git-head
 
 # ---------------------------------------------------------------------------------------------------------------------
 
 # must rebuild, if these files's content change
-REBUILD_FLAG_FILES   = ${OUT_BUILD_CONFIG}
+REBUILD_FLAG_FILES   = ${OUT_BUILD_CONFIG} ${OUT_GIT_DESCRIBE}
 
 LAST_BUILD_CONFIG    = $(shell (test -f ${OUT_BUILD_CONFIG} && cat ${OUT_BUILD_CONFIG}) || echo -n "-1")
+LAST_GIT_DESCRIBE    = $(shell (test -f ${OUT_GIT_DESCRIBE} && cat ${OUT_GIT_DESCRIBE}) || echo -n "-")
 
 # ---------------------------------------------------------------------------------------------------------------------
 
@@ -103,6 +105,10 @@ ${OUT_BUILD_CONFIG}:
 	echo -n ${BUILD_CONFIG} > ${OUT_BUILD_CONFIG}
 	$(eval LAST_BUILD_CONFIG := ${BUILD_CONFIG})
 
+${OUT_GIT_DESCRIBE}:
+	echo -n ${GIT_DESCRIBE} > ${OUT_GIT_DESCRIBE}
+	$(eval LAST_GIT_DESCRIBE := ${GIT_DESCRIBE})
+
 ${OUT_GENERATOR_SCRIPT}: ${IN_GENERATOR_SCRIPT}
 	cat ${IN_GENERATOR_SCRIPT} | sed 's+@IOC_PATH@+${PROJECT_FILE}+' > ${OUT_GENERATOR_SCRIPT}
 
@@ -155,12 +161,13 @@ ${OUT_HEX_IMAGE}: dynamic-dependencies ${DIR_GENERATED}/Makefile ${OUT_IMAGES} |
 # rebuild dependencies
 f-rebuild: ${REBUILD_FLAG_FILES}
 bconf-eq-last: $(shell test ${LAST_BUILD_CONFIG} = ${BUILD_CONFIG} || echo -n "clean-soft f-rebuild")
+discr-eq-last: $(shell test ${LAST_GIT_DESCRIBE} = ${GIT_DESCRIBE} || echo -n "clean-soft f-rebuild")
 
 # style checking
 style-ok: $(shell ${STYLER_OK} > /dev/null 2>&1 || echo -n "format-all")
 
 # dependencies determined before exceution
-dynamic-dependencies: bconf-eq-last style-ok
+dynamic-dependencies: bconf-eq-last discr-eq-last style-ok
 
 ${DIR_OBJ}:
 	mkdir $@

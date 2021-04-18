@@ -16,6 +16,16 @@ if not os.path.isdir(sourceFolder):
     print("Path must be a dir")
     exit(-1)
 
+if len(sys.argv) >= 3:
+    outputFolder = sys.argv[2]
+    if not os.path.isdir(outputFolder):
+        print("Path must be a dir")
+        exit(-1)
+else:
+    outputFolder = sourceFolder + "/generated"
+    if not os.path.exists(outputFolder):
+        os.makedirs(outputFolder)
+
 # ---------------------------------------------------------------------------------------------------------------------
 
 def processBitmap(path):
@@ -115,10 +125,6 @@ footer =  (
 
 bitmapFiles = glob(sourceFolder + "/*.bmp")
 bitmapFiles.sort()
-
-outputFolder = sourceFolder + "/generated"
-if not os.path.exists(outputFolder):
-    os.makedirs(outputFolder)
 
 iHpp = open(outputFolder + "/images.hpp", "w")
 iCpp = open(outputFolder + "/images.cpp", "w")

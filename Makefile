@@ -29,6 +29,7 @@ DIR_OBJ              = ${DIR_BUILD}/obj
 DIR_OUTPUT           = ${DIR_BUILD}/images
 DIR_INJECTIONS       = ${PATH_VCUBE}/injections
 DIR_VSCODE           = ${R}/.vscode
+DIR_GENERATED_IMAGES = ${DIR_GENERATED}/images
 
 IN_BUILD_CONFIG      = ${R}/build.conf.mk
 IN_GENERATOR_SCRIPT  = ${DIR_INJECTIONS}/generate.template
@@ -74,7 +75,6 @@ include ${IN_BUILD_CONFIG}
 
 # these variables are passed down to second Makefile
 export DIR_CPP_SRC   = ${R}/src
-export DIR_IMAGES    = ${R}/images
 export DIR_VCL_SRC   = ${PATH_VCUBE}/lib/src
 export BUILD_DIR     = ${DIR_OBJ}
 
@@ -145,8 +145,10 @@ ${DIR_GENERATED}/Makefile: ${OUT_GENERATED} Makefile ${IN_BUILD_CONFIG} ${DIR_IN
 	cat "${DIR_INJECTIONS}/c_cpp_properties.template" | sed 's+@TARGET_DEF@+${TARGET_DEF}+' > ${DIR_VSCODE}/c_cpp_properties.json
 	@echo "Target define: ${TARGET_DEF}"
 
-${OUT_IMAGES}: $(shell find ${DIR_IMAGES} -maxdepth 1 -type f) ${PATH_VCUBE}/convert-images.py
-	! test -d ${DIR_IMAGES} || ${PATH_VCUBE}/convert-images.py ${DIR_IMAGES}
+IMAGE_CHANGE_FILES = ${DIR_IMAGES} $(shell find ${DIR_IMAGES} -type f) $(shell find ${DIR_IMAGES} -type d)
+
+${OUT_IMAGES}: ${IMAGE_CHANGE_FILES} ${PATH_VCUBE}/convert-images.py | ${DIR_GENERATED_IMAGES}
+	! test -d ${DIR_IMAGES} || ${PATH_VCUBE}/convert-images.py ${DIR_IMAGES} ${DIR_GENERATED_IMAGES}
 	touch ${OUT_IMAGES}
 
 .SILENT: ${OUT_HEX_IMAGE}
@@ -178,6 +180,8 @@ ${DIR_OUTPUT}:
 ${DIR_VSCODE}:
 	mkdir $@
 
+${DIR_GENERATED_IMAGES}:
+	mkdir $@
 
 clean-soft:
 	@echo "Reseting rebuild flags..."

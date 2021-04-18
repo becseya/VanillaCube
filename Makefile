@@ -55,9 +55,9 @@ RM                   = rm -Rf
 STYLER_DO            = find ${R}/src -name "*.hpp" -o -name "*.cpp" | xargs clang-format -i
 STYLER_OK            = ${STYLER_DO} --dry-run -Werror
 
-.PHONY: all clean clean-deep clean-purge ${OUT_HEX_IMAGE}
+.PHONY: all artifact clean clean-deep clean-purge ${OUT_HEX_IMAGE}
 
-all: ${OUT_HEX_IMAGE}
+all: artifact
 
 Makefile: ;
 ${PROJECT_FILE}: ;
@@ -153,10 +153,13 @@ ${OUT_IMAGES}: $(shell find ${DIR_IMAGES} -maxdepth 1 -type f) ${PATH_VCUBE}/con
 	touch ${OUT_IMAGES}
 
 .SILENT: ${OUT_HEX_IMAGE}
-${OUT_HEX_IMAGE}: dynamic-dependencies ${DIR_GENERATED}/Makefile ${OUT_IMAGES} | ${DIR_BIN_IMAGES} ${DIR_OBJ}
+${OUT_HEX_IMAGE}: ${DIR_GENERATED}/Makefile ${OUT_IMAGES} | ${DIR_BIN_IMAGES} ${DIR_OBJ}
 	cd ${DIR_GENERATED} && make -j
 	cp ${DIR_OBJ}/${TARGET}.hex ${OUT_HEX_IMAGE}
+	cp ${DIR_OBJ}/${TARGET}.hex ${DIR_BIN_IMAGES}/${TARGET}-${GIT_DESCRIBE}-${BUILD_CONFIG_TXT}.hex
 	$(call display_info)
+
+artifact: dynamic-dependencies ${OUT_HEX_IMAGE}
 
 # rebuild dependencies
 f-rebuild: ${REBUILD_FLAG_FILES}
@@ -222,7 +225,7 @@ update-vanillacube:
 edit-project:
 	${PATH_CUBE_MX} ${PROJECT_FILE}
 
-flash: all
+flash: ${OUT_HEX_IMAGE}
 	${PATH_CUBE_PROG} -c port=SWD mode=UR -w ${DIR_BIN_IMAGES}/${TARGET}.hex 0x8000000 -v -rst
 
 flash-rst:

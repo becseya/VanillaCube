@@ -46,7 +46,10 @@ void Scheduler::updateCpuLoad()
         uint64_t runtime_sum = 0;
 
         for (size_t i = 0; i < tasks.size(); i++)
+        {
+            tasks[i]->updateLoad(static_cast<TaskInfo::counter_t>(d_tick));
             runtime_sum += tasks[i]->getInfo().runTime;
+        }
 
         cpuLoad         = (float)(runtime_sum - last_sum) / d_tick;
         last_load_check = Timing::getSysick();

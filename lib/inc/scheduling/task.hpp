@@ -12,8 +12,11 @@ struct TaskInfo
     const char* name;
     counter_t   runCntr;
     counter_t   runTime;
+    float       load;
+    counter_t   lastRunTime;
 
     float getAverageRuntime() const;
+    void  updateLoad(counter_t passed_since_last_update);
 };
 
 // --------------------------------------------------------------------------------------------------------------------
@@ -32,6 +35,8 @@ class Task
     unsigned        getPriority() const;
     const TaskInfo& getInfo() const;
     bool            isHigherPriority(const Task& other) const;
+
+    void updateLoad(TaskInfo::counter_t passed_since_last_update);
 
     virtual void execute();
     virtual bool isReady() = 0;

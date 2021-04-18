@@ -21,57 +21,106 @@ TARGET = $(shell cat ${PROJECT_FILE} | grep -Po '(?<=ProjectManager.ProjectName=
 
 # ---------------------------------------------------------------------------------------------------------------------
 
+GIT_DESCRIBE         = $(shell git describe --dirty)
+GIT_BRANCH           = $(shell git branch --show-current)
+DATE                 = $(shell date -u +'%Y-%m-%d %H:%M:%S %Z')
+
 DIR_OBJ              = ${DIR_OUTPUT}/obj
 DIR_BIN_IMAGES       = ${DIR_OUTPUT}/images
 DIR_INJECTIONS       = ${PATH_VCUBE}/injections
 DIR_VSCODE           = ${R}/.vscode
 
+IN_BUILD_CONFIG      = ${R}/build.conf.mk
 IN_GENERATOR_SCRIPT  = ${DIR_INJECTIONS}/generate.template
-IN_PATHS_MK          = ${DIR_INJECTIONS}/paths.template.mk
 
-OUT_PATHS_MK         = ${DIR_OUTPUT}/paths.mk
 OUT_GENERATOR_SCRIPT = ${DIR_OUTPUT}/generate.script
 OUT_GENERATED        = ${DIR_OUTPUT}/.generated
-OUT_ORIGINAL         = ${DIR_OUTPUT}/.original
+OUT_SRC_INJECTED     = ${DIR_OUTPUT}/.src_injected
 OUT_HEX_IMAGE        = ${DIR_BIN_IMAGES}/${TARGET}.hex
 OUT_IMAGES           = ${DIR_OUTPUT}/.images
+OUT_BUILD_CONFIG     = ${DIR_OUTPUT}/.build-config
+OUT_GIT_DESCRIBE     = ${DIR_OUTPUT}/.git-head
 
-RM = rm -Rf
+# ---------------------------------------------------------------------------------------------------------------------
 
-.PHONY: all clean clean-deep clean-purge ${OUT_HEX_IMAGE}
+# must rebuild, if these files's content change
+REBUILD_FLAG_FILES   = ${OUT_BUILD_CONFIG} ${OUT_GIT_DESCRIBE}
 
-all: ${OUT_HEX_IMAGE}
+LAST_BUILD_CONFIG    = $(shell (test -f ${OUT_BUILD_CONFIG} && cat ${OUT_BUILD_CONFIG}) || echo -n "-1")
+LAST_GIT_DESCRIBE    = $(shell (test -f ${OUT_GIT_DESCRIBE} && cat ${OUT_GIT_DESCRIBE}) || echo -n "-")
+
+# ---------------------------------------------------------------------------------------------------------------------
+
+RM                   = rm -Rf
+STYLER_DO            = find ${R}/src -name "*.hpp" -o -name "*.cpp" | xargs clang-format -i
+STYLER_OK            = ${STYLER_DO} --dry-run -Werror
+
+.PHONY: all artifact clean clean-deep clean-purge ${OUT_HEX_IMAGE}
+
+all: artifact
 
 Makefile: ;
 ${PROJECT_FILE}: ;
 ${IN_GENERATOR_SCRIPT}: ;
+${IN_BUILD_CONFIG}: ;
 
 # ---------------------------------------------------------------------------------------------------------------------
 
-${OUT_GENERATOR_SCRIPT}: ${IN_GENERATOR_SCRIPT} # | output folder already exsists
+ifndef BUILD_CONFIG
+BUILD_CONFIG = 0
+endif
+
+ifeq (,$(wildcard ${IN_BUILD_CONFIG}))
+$(error Buiild config is missing. Run 'VanillaCube/install.sh')
+endif
+
+include ${IN_BUILD_CONFIG}
+
+# these variables are passed down to second Makefile
+export DIR_CPP_SRC   = ${R}/src
+export DIR_IMAGES    = ${R}/images
+export DIR_VCL_SRC   = ${PATH_VCUBE}/lib/src
+export BUILD_DIR     = ${DIR_OBJ}
+
+export EXT_AS_FLAGS  = ${AS_FLAGS}
+export EXT_C_FLAGS   = ${C_FLAGS}
+export EXT_CPP_FLAGS = ${CPP_FLAGS}
+export EXT_LD_FLAGS  = ${LD_FLAGS}
+
+export OPT
+
+# ---------------------------------------------------------------------------------------------------------------------
+
+define display_info
+	@printf "\n\n"
+	@echo "Git: ${GIT_DESCRIBE} at branch ${GIT_BRANCH}"
+	@echo "Build config: ${BUILD_CONFIG_TXT}"
+	$(shell test -n "$$(git status -s)" && echo '@echo ""; echo "WARNING: Uncommited changes !"')
+	@printf "\n *** Finished successfully! *** \n"
+endef
+
+# Output folder already exsists, we never have to depend on it. (See: include ${MK_ENV})
+
+${OUT_BUILD_CONFIG}:
+	echo -n ${BUILD_CONFIG} > ${OUT_BUILD_CONFIG}
+	$(eval LAST_BUILD_CONFIG := ${BUILD_CONFIG})
+
+${OUT_GIT_DESCRIBE}:
+	echo -n ${GIT_DESCRIBE} > ${OUT_GIT_DESCRIBE}
+	$(eval LAST_GIT_DESCRIBE := ${GIT_DESCRIBE})
+
+${OUT_GENERATOR_SCRIPT}: ${IN_GENERATOR_SCRIPT}
 	cat ${IN_GENERATOR_SCRIPT} | sed 's+@IOC_PATH@+${PROJECT_FILE}+' > ${OUT_GENERATOR_SCRIPT}
 
 ${OUT_GENERATED}: ${PROJECT_FILE} | ${OUT_GENERATOR_SCRIPT}
 	${RM} ${DIR_GENERATED}/Makefile
 	${PATH_CUBE_MX} -q ${OUT_GENERATOR_SCRIPT}
+	mv ${DIR_GENERATED}/Makefile ${DIR_GENERATED}/Makefile.original
 	touch ${OUT_GENERATED}
 
-${OUT_ORIGINAL}: ${OUT_GENERATED}
+${OUT_SRC_INJECTED}: ${OUT_GENERATED}
 	$(eval IT_FILE_NAME := $(shell basename $$(find ${DIR_GENERATED}/Inc -name *_it.h) .h))
-	mv ${DIR_GENERATED}/Makefile ${DIR_GENERATED}/Makefile.original
-	mv ${DIR_GENERATED}/Inc/main.h ${DIR_GENERATED}/Inc/main.h.original
-	mv ${DIR_GENERATED}/Src/main.c ${DIR_GENERATED}/Src/main.c.original
-	mv ${DIR_GENERATED}/Inc/${IT_FILE_NAME}.h ${DIR_GENERATED}/Inc/${IT_FILE_NAME}.h.original
-	mv ${DIR_GENERATED}/Src/${IT_FILE_NAME}.c ${DIR_GENERATED}/Src/${IT_FILE_NAME}.c.original
-	touch ${OUT_ORIGINAL}
-
-${DIR_GENERATED}/Makefile: ${OUT_ORIGINAL} Makefile ${DIR_INJECTIONS}/*.mk | ${DIR_VSCODE}
-	$(eval IT_FILE_NAME := $(shell basename $$(find ${DIR_GENERATED}/Inc -name *_it.h.original) .h.original))
 # inject main
-	cp ${DIR_GENERATED}/Inc/main.h.original ${DIR_GENERATED}/Inc/main.h
-	cp ${DIR_GENERATED}/Src/main.c.original ${DIR_GENERATED}/Src/main.c
-	cp ${DIR_GENERATED}/Inc/${IT_FILE_NAME}.h.original ${DIR_GENERATED}/Inc/${IT_FILE_NAME}.h
-	cp ${DIR_GENERATED}/Src/${IT_FILE_NAME}.c.original ${DIR_GENERATED}/Src/${IT_FILE_NAME}.c
 	sed -i '/USER CODE END EFP/a\void main_init();' ${DIR_GENERATED}/Inc/main.h
 	sed -i '/USER CODE END EFP/a\void main_loop();' ${DIR_GENERATED}/Inc/main.h
 	sed -i '/USER CODE END 2/a\  main_init();'       ${DIR_GENERATED}/Src/main.c
@@ -80,20 +129,17 @@ ${DIR_GENERATED}/Makefile: ${OUT_ORIGINAL} Makefile ${DIR_INJECTIONS}/*.mk | ${D
 	sed -i '/USER CODE END 2/a\  SysTick->CTRL |= SysTick_CTRL_TICKINT_Msk;'          ${DIR_GENERATED}/Src/main.c
 	sed -i '/USER CODE END EM/a\volatile uint64_t __vanillacube_systick_counter = 0;' ${DIR_GENERATED}/Inc/${IT_FILE_NAME}.h
 	sed -i '/USER CODE END SysTick_IRQn 0/a\  __vanillacube_systick_counter++;'       ${DIR_GENERATED}/Src/${IT_FILE_NAME}.c
-# prepare path makefile
-	cp ${IN_PATHS_MK} ${OUT_PATHS_MK}
-	sed -i 's+@DIR_CPP_SRC@+${R}/src+'              ${OUT_PATHS_MK}
-	sed -i 's+@DIR_IMAGES@+${R}/images+'            ${OUT_PATHS_MK}
-	sed -i 's+@DIR_VCL_SRC@+${PATH_VCUBE}/lib/src+' ${OUT_PATHS_MK}
-	sed -i 's+@BUILD_DIR@+${DIR_OBJ}+'              ${OUT_PATHS_MK}
+	touch ${OUT_SRC_INJECTED}
+
+${DIR_GENERATED}/Makefile: ${OUT_SRC_INJECTED} Makefile ${IN_BUILD_CONFIG} ${DIR_INJECTIONS}/*.mk | ${DIR_VSCODE}
 # inject makefile
 	cp ${DIR_GENERATED}/Makefile.original ${DIR_GENERATED}/Makefile
-	sed -i '/# paths/,/# source/c\___PATHS___'                  ${DIR_GENERATED}/Makefile
+	sed -i '/# building variables/,/# source/c\___PATHS___'     ${DIR_GENERATED}/Makefile
 	sed -i '/# binaries/,/# CFLAGS/c\___BIN_AND_CPP_SOURCES___' ${DIR_GENERATED}/Makefile
 	sed -i '/vpath %.s/a\___COMPILE___'                         ${DIR_GENERATED}/Makefile
 	sed -i '/C_INCLUDES =/a\-I${PATH_VCUBE}/lib/inc \\'         ${DIR_GENERATED}/Makefile
 	sed -i '/# dependencies/,/# \*\+ EOF/c\___DEPENDENCY___'    ${DIR_GENERATED}/Makefile
-	sed -i -e '/___PATHS___/{r ${OUT_PATHS_MK}' -e 'd}'                            ${DIR_GENERATED}/Makefile
+	sed -i -e '/___PATHS___/{r ${DIR_INJECTIONS}/path_info.mk' -e 'd}'             ${DIR_GENERATED}/Makefile
 	sed -i -e '/___BIN_AND_CPP_SOURCES___/{r ${DIR_INJECTIONS}/bin_cpp.mk' -e 'd}' ${DIR_GENERATED}/Makefile
 	sed -i -e '/___COMPILE___/{r ${DIR_INJECTIONS}/compile.mk' -e 'd}'             ${DIR_GENERATED}/Makefile
 	sed -i -e '/___DEPENDENCY___/{r ${DIR_INJECTIONS}/dependency.mk' -e 'd}'       ${DIR_GENERATED}/Makefile
@@ -110,6 +156,21 @@ ${OUT_IMAGES}: $(shell find ${DIR_IMAGES} -maxdepth 1 -type f) ${PATH_VCUBE}/con
 ${OUT_HEX_IMAGE}: ${DIR_GENERATED}/Makefile ${OUT_IMAGES} | ${DIR_BIN_IMAGES} ${DIR_OBJ}
 	cd ${DIR_GENERATED} && make -j
 	cp ${DIR_OBJ}/${TARGET}.hex ${OUT_HEX_IMAGE}
+	cp ${DIR_OBJ}/${TARGET}.hex ${DIR_BIN_IMAGES}/${TARGET}-${GIT_DESCRIBE}-${BUILD_CONFIG_TXT}.hex
+	$(call display_info)
+
+artifact: dynamic-dependencies ${OUT_HEX_IMAGE}
+
+# rebuild dependencies
+f-rebuild: ${REBUILD_FLAG_FILES}
+bconf-eq-last: $(shell test ${LAST_BUILD_CONFIG} = ${BUILD_CONFIG} || echo -n "clean-soft f-rebuild")
+discr-eq-last: $(shell test ${LAST_GIT_DESCRIBE} = ${GIT_DESCRIBE} || echo -n "clean-soft f-rebuild")
+
+# style checking
+style-ok: $(shell ${STYLER_OK} > /dev/null 2>&1 || echo -n "format-all")
+
+# dependencies determined before exceution
+dynamic-dependencies: bconf-eq-last discr-eq-last style-ok
 
 ${DIR_OBJ}:
 	mkdir $@
@@ -120,15 +181,32 @@ ${DIR_BIN_IMAGES}:
 ${DIR_VSCODE}:
 	mkdir $@
 
-clean:
-	${RM} ${DIR_OBJ} ${DIR_BIN_IMAGES} ${DIR_GENERATED}/Makefile ${DIR_IMAGES}/generated ${OUT_IMAGES}
+
+clean-soft:
+	@echo "Reseting rebuild flags..."
+# build control files
+	${RM} ${REBUILD_FLAG_FILES}
+# binaries
+	${RM} ${DIR_OBJ}
+
+clean: clean-soft
+	@echo "Cleaning..."
+# build control files
+	${RM} ${DIR_GENERATED}/Makefile ${OUT_IMAGES}
+# binaries
+	${RM} ${DIR_BIN_IMAGES} ${DIR_IMAGES}/generated
 
 clean-deep: clean
-	find ${DIR_GENERATED} ! -name '${TARGET}.ioc' -type f -exec rm -f {} +
+	@echo "Deep cleaning..."
+# build control files
+	${RM} ${OUT_GENERATED}
+# binaries
+	find ${DIR_GENERATED} ! -name '${TARGET}.ioc' -type f -exec ${RM} {} +
 	find ${DIR_GENERATED} -type d -empty -delete
-	${RM} ${OUT_GENERATED} ${OUT_GENERATOR_SCRIPT}
+	${RM} ${OUT_GENERATOR_SCRIPT}
 
 clean-purge: clean-deep
+	@echo "Purging..."
 	${RM} ${DIR_OUTPUT}
 	${PATH_VCUBE}/install.sh
 
@@ -137,8 +215,7 @@ clean-purge: clean-deep
 .PHONY: format-all update-vanillacube edit-project flash flash-rst
 
 format-all:
-	find . -name "*.hpp" | xargs clang-format -i
-	find . -name "*.cpp" | xargs clang-format -i
+	${STYLER_DO}
 
 update-vanillacube:
 	git -C ${PATH_VCUBE} checkout master
@@ -148,7 +225,7 @@ update-vanillacube:
 edit-project:
 	${PATH_CUBE_MX} ${PROJECT_FILE}
 
-flash: all
+flash: ${OUT_HEX_IMAGE}
 	${PATH_CUBE_PROG} -c port=SWD mode=UR -w ${DIR_BIN_IMAGES}/${TARGET}.hex 0x8000000 -v -rst
 
 flash-rst:

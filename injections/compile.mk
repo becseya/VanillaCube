@@ -5,9 +5,10 @@ OBJECTS += $(subst ${DIR_CPP_SRC},${BUILD_DIR}/src,${CPP_SOURCES:.cpp=.cpp.o})
 OBJECTS += $(subst ${DIR_VCL_SRC},${BUILD_DIR}/lib,${LIB_SOURCES:.cpp=.cpp.o})
 OBJECTS += $(subst ${DIR_IMAGES},${BUILD_DIR}/img,${IMG_SOURCES:.cpp=.cpp.o})
 
-CPPFLAGS = ${CFLAGS} -std=c++17 -fno-rtti -fno-exceptions -specs=nosys.specs -Wno-register
-
-LDFLAGS += -u _printf_float
+ASFLAGS += ${EXT_AS_FLAGS}
+CFLAGS += ${EXT_C_FLAGS}
+LDFLAGS += ${EXT_LD_FLAGS}
+CPPFLAGS = ${CFLAGS} ${EXT_CPP_FLAGS}
 
 ${BUILD_DIR}/src/%.cpp.o: ${DIR_CPP_SRC}/%.cpp Makefile | ${BUILD_DIR}
 	mkdir -p $(@D)

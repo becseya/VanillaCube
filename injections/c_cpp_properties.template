@@ -11,6 +11,10 @@
             "defines": [
                 "USE_FULL_LL_DRIVER",
                 "PREFETCH_ENABLE",
+                "BUILD_CONFIG",
+                "VERSION_TXT",
+                "BUILD_CONFIG_TXT",
+                "BUILD_DATE_TXT",
                 "@TARGET_DEF@"
             ],
             "compilerPath": "/usr/bin/arm-none-eabi-gcc",

@@ -66,10 +66,6 @@ ${IN_BUILD_CONFIG}: ;
 
 # ---------------------------------------------------------------------------------------------------------------------
 
-ifndef BUILD_CONFIG
-BUILD_CONFIG = 0
-endif
-
 ifeq (,$(wildcard ${IN_BUILD_CONFIG}))
 $(error Buiild config is missing. Run 'VanillaCube/install.sh')
 endif

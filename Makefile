@@ -34,8 +34,8 @@ IN_BUILD_CONFIG      = ${R}/build.conf.mk
 IN_GENERATOR_SCRIPT  = ${DIR_INJECTIONS}/generate.template
 
 OUT_GENERATOR_SCRIPT = ${DIR_OUTPUT}/generate.script
+OUT_GENERATED_MX     = ${DIR_OUTPUT}/.generated-cubemx
 OUT_GENERATED        = ${DIR_OUTPUT}/.generated
-OUT_SRC_INJECTED     = ${DIR_OUTPUT}/.src_injected
 OUT_HEX_IMAGE        = ${DIR_BIN_IMAGES}/${TARGET}.hex
 OUT_IMAGES           = ${DIR_OUTPUT}/.images
 OUT_BUILD_CONFIG     = ${DIR_OUTPUT}/.build-config
@@ -108,13 +108,14 @@ ${OUT_GIT_DESCRIBE}:
 ${OUT_GENERATOR_SCRIPT}: ${IN_GENERATOR_SCRIPT}
 	cat ${IN_GENERATOR_SCRIPT} | sed 's+@IOC_PATH@+${PROJECT_FILE}+' > ${OUT_GENERATOR_SCRIPT}
 
-${OUT_GENERATED}: ${PROJECT_FILE} | ${OUT_GENERATOR_SCRIPT}
+${OUT_GENERATED_MX}: ${PROJECT_FILE} | ${OUT_GENERATOR_SCRIPT}
 	${RM} ${DIR_GENERATED}/Makefile
 	${PATH_CUBE_MX} -q ${OUT_GENERATOR_SCRIPT}
 	mv ${DIR_GENERATED}/Makefile ${DIR_GENERATED}/Makefile.original
-	touch ${OUT_GENERATED}
+	touch ${OUT_GENERATED_MX}
 
-${OUT_SRC_INJECTED}: ${OUT_GENERATED}
+${OUT_GENERATED}: ${OUT_GENERATED_MX}
+# must be a separate target to eval IT_FILE_NAME properly
 	$(eval IT_FILE_NAME := $(shell basename $$(find ${DIR_GENERATED}/Inc -name *_it.h) .h))
 # inject main
 	sed -i '/USER CODE END EFP/a\void main_init();' ${DIR_GENERATED}/Inc/main.h
@@ -125,9 +126,9 @@ ${OUT_SRC_INJECTED}: ${OUT_GENERATED}
 	sed -i '/USER CODE END 2/a\  SysTick->CTRL |= SysTick_CTRL_TICKINT_Msk;'          ${DIR_GENERATED}/Src/main.c
 	sed -i '/USER CODE END EM/a\volatile uint64_t __vanillacube_systick_counter = 0;' ${DIR_GENERATED}/Inc/${IT_FILE_NAME}.h
 	sed -i '/USER CODE END SysTick_IRQn 0/a\  __vanillacube_systick_counter++;'       ${DIR_GENERATED}/Src/${IT_FILE_NAME}.c
-	touch ${OUT_SRC_INJECTED}
+	touch ${OUT_GENERATED}
 
-${DIR_GENERATED}/Makefile: ${OUT_SRC_INJECTED} Makefile ${IN_BUILD_CONFIG} ${DIR_INJECTIONS}/*.mk | ${DIR_VSCODE}
+${DIR_GENERATED}/Makefile: ${OUT_GENERATED} Makefile ${IN_BUILD_CONFIG} ${DIR_INJECTIONS}/*.mk | ${DIR_VSCODE}
 # inject makefile
 	cp ${DIR_GENERATED}/Makefile.original ${DIR_GENERATED}/Makefile
 	sed -i '/# building variables/,/# source/c\___PATHS___'     ${DIR_GENERATED}/Makefile
@@ -195,7 +196,7 @@ clean: clean-soft
 clean-deep: clean
 	@echo "Deep cleaning..."
 # build control files
-	${RM} ${OUT_GENERATED}
+	${RM} ${OUT_GENERATED} ${OUT_GENERATED_MX}
 # binaries
 	find ${DIR_GENERATED} ! -name '${TARGET}.ioc' -type f -exec ${RM} {} +
 	find ${DIR_GENERATED} -type d -empty -delete

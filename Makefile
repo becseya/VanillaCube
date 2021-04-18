@@ -1,10 +1,10 @@
 # Makefile installed by VanillaCube IDE
 
 R             = $(shell pwd)
-DIR_OUTPUT    = ${R}/build
+DIR_BUILD     = ${R}/build
 DIR_GENERATED = ${R}/generated
 DIR_IMAGES    = ${R}/images
-MK_ENV        = ${DIR_OUTPUT}/vcube-install/env.mk
+MK_ENV        = ${DIR_BUILD}/vcube-install/env.mk
 PROJECT_FILE  = $(shell find ${DIR_GENERATED} -name '*.ioc' 2>/dev/null)
 
 ifeq (,$(wildcard ${MK_ENV}))
@@ -25,21 +25,21 @@ GIT_DESCRIBE         = $(shell git describe --dirty)
 GIT_BRANCH           = $(shell git branch --show-current)
 DATE                 = $(shell date -u +'%Y-%m-%d %H:%M:%S %Z')
 
-DIR_OBJ              = ${DIR_OUTPUT}/obj
-DIR_BIN_IMAGES       = ${DIR_OUTPUT}/images
+DIR_OBJ              = ${DIR_BUILD}/obj
+DIR_OUTPUT           = ${DIR_BUILD}/images
 DIR_INJECTIONS       = ${PATH_VCUBE}/injections
 DIR_VSCODE           = ${R}/.vscode
 
 IN_BUILD_CONFIG      = ${R}/build.conf.mk
 IN_GENERATOR_SCRIPT  = ${DIR_INJECTIONS}/generate.template
 
-OUT_GENERATOR_SCRIPT = ${DIR_OUTPUT}/generate.script
-OUT_GENERATED_MX     = ${DIR_OUTPUT}/.generated-cubemx
-OUT_GENERATED        = ${DIR_OUTPUT}/.generated
-OUT_HEX_IMAGE        = ${DIR_BIN_IMAGES}/${TARGET}.hex
-OUT_IMAGES           = ${DIR_OUTPUT}/.images
-OUT_BUILD_CONFIG     = ${DIR_OUTPUT}/.build-config
-OUT_GIT_DESCRIBE     = ${DIR_OUTPUT}/.git-head
+OUT_GENERATOR_SCRIPT = ${DIR_BUILD}/generate.script
+OUT_GENERATED_MX     = ${DIR_BUILD}/.generated-cubemx
+OUT_GENERATED        = ${DIR_BUILD}/.generated
+OUT_HEX_IMAGE        = ${DIR_OUTPUT}/${TARGET}.hex
+OUT_IMAGES           = ${DIR_BUILD}/.images
+OUT_BUILD_CONFIG     = ${DIR_BUILD}/.build-config
+OUT_GIT_DESCRIBE     = ${DIR_BUILD}/.git-head
 
 # ---------------------------------------------------------------------------------------------------------------------
 
@@ -150,10 +150,10 @@ ${OUT_IMAGES}: $(shell find ${DIR_IMAGES} -maxdepth 1 -type f) ${PATH_VCUBE}/con
 	touch ${OUT_IMAGES}
 
 .SILENT: ${OUT_HEX_IMAGE}
-${OUT_HEX_IMAGE}: ${DIR_GENERATED}/Makefile ${OUT_IMAGES} | ${DIR_BIN_IMAGES} ${DIR_OBJ}
+${OUT_HEX_IMAGE}: ${DIR_GENERATED}/Makefile ${OUT_IMAGES} | ${DIR_OUTPUT} ${DIR_OBJ}
 	cd ${DIR_GENERATED} && make -j
 	cp ${DIR_OBJ}/${TARGET}.hex ${OUT_HEX_IMAGE}
-	cp ${DIR_OBJ}/${TARGET}.hex ${DIR_BIN_IMAGES}/${TARGET}-${GIT_DESCRIBE}-${BUILD_CONFIG_TXT}.hex
+	cp ${DIR_OBJ}/${TARGET}.hex ${DIR_OUTPUT}/${TARGET}-${GIT_DESCRIBE}-${BUILD_CONFIG_TXT}.hex
 	$(call display_info)
 
 artifact: dynamic-dependencies ${OUT_HEX_IMAGE}
@@ -172,7 +172,7 @@ dynamic-dependencies: bconf-eq-last discr-eq-last style-ok
 ${DIR_OBJ}:
 	mkdir $@
 
-${DIR_BIN_IMAGES}:
+${DIR_OUTPUT}:
 	mkdir $@
 
 ${DIR_VSCODE}:
@@ -191,7 +191,7 @@ clean: clean-soft
 # build control files
 	${RM} ${DIR_GENERATED}/Makefile ${OUT_IMAGES}
 # binaries
-	${RM} ${DIR_BIN_IMAGES} ${DIR_IMAGES}/generated
+	${RM} ${DIR_OUTPUT} ${DIR_IMAGES}/generated
 
 clean-deep: clean
 	@echo "Deep cleaning..."
@@ -204,7 +204,7 @@ clean-deep: clean
 
 clean-purge: clean-deep
 	@echo "Purging..."
-	${RM} ${DIR_OUTPUT}
+	${RM} ${DIR_BUILD}
 	${PATH_VCUBE}/install.sh
 
 # ---------------------------------------------------------------------------------------------------------------------
@@ -223,7 +223,7 @@ edit-project:
 	${PATH_CUBE_MX} ${PROJECT_FILE}
 
 flash: ${OUT_HEX_IMAGE}
-	${PATH_CUBE_PROG} -c port=SWD mode=UR -w ${DIR_BIN_IMAGES}/${TARGET}.hex 0x8000000 -v -rst
+	${PATH_CUBE_PROG} -c port=SWD mode=UR -w ${DIR_OUTPUT}/${TARGET}.hex 0x8000000 -v -rst
 
 flash-rst:
 	${PATH_CUBE_PROG} -c port=SWD mode=UR -rst

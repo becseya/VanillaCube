@@ -29,7 +29,7 @@ ALWAYS_INLINE void NOP<0>(){};
 template<typename T>
 ALWAYS_INLINE uint32_t& ENUM_TO_UINT(T& val)
 {
-    static_assert(std::is_enum<T>::value, "T must me an enum");
+    static_assert(std::is_enum<T>::value, "T must be an enum");
 
     return (uint32_t&)(val);
 }

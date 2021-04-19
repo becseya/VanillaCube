@@ -9,21 +9,22 @@
 
 namespace VanillaCube {
 namespace Periph {
+namespace I2c {
 
 #ifdef I2C1_BASE
-using I2CBus1 = periph_wrapper_t<I2C1_BASE, Bus::APB1, LL_APB1_GRP1_PERIPH_I2C1>;
+using Bus1 = periph_wrapper_t<I2C1_BASE, Bus::APB1, LL_APB1_GRP1_PERIPH_I2C1>;
 #endif
 #ifdef I2C2_BASE
-using I2CBus2 = periph_wrapper_t<I2C2_BASE, Bus::APB1, LL_APB1_GRP1_PERIPH_I2C2>;
+using Bus2 = periph_wrapper_t<I2C2_BASE, Bus::APB1, LL_APB1_GRP1_PERIPH_I2C2>;
 #endif
 
-enum class I2CAddrMode : uint32_t
+enum class AddrMode : uint32_t
 {
     WR = 0, // Write
     RD = 1, // Read
 };
 
-enum class I2CResult : int32_t
+enum class Result : int32_t
 {
     Success            = 0,
     Fail_BusIsBusy     = -1,
@@ -35,13 +36,13 @@ enum class I2CResult : int32_t
     Fail_RxData        = -7,
 };
 
-bool operator!(const I2CResult& result)
+bool operator!(const Result& result)
 {
-    return (result != I2CResult::Success);
+    return (result != Result::Success);
 }
 
 template<typename PERIPH>
-struct I2C : public Peripheral<PERIPH, I2C_TypeDef>
+struct Bus : public Peripheral<PERIPH, I2C_TypeDef>
 {
     using Peripheral<PERIPH, I2C_TypeDef>::CTRL_STRUCT;
 
@@ -77,12 +78,12 @@ struct I2C : public Peripheral<PERIPH, I2C_TypeDef>
 
     // ---
 
-    static ALWAYS_INLINE I2CResult generateStart(bool repeated = false)
+    static ALWAYS_INLINE Result generateStart(bool repeated = false)
     {
         if (!repeated) {
             // wait until busy flag is cleared
             if (WAIT_FOR_FLAG([&]() -> bool { return !LL_I2C_IsActiveFlag_BUSY(&CTRL_STRUCT()); }))
-                return I2CResult::Fail_BusIsBusy;
+                return Result::Fail_BusIsBusy;
 
             // disable POS (master mode)
             LL_I2C_DisableBitPOS(&CTRL_STRUCT());
@@ -91,9 +92,9 @@ struct I2C : public Peripheral<PERIPH, I2C_TypeDef>
         // generate START
         LL_I2C_GenerateStartCondition(&CTRL_STRUCT());
         if (WAIT_FOR_FLAG([&]() -> bool { return LL_I2C_IsActiveFlag_SB(&CTRL_STRUCT()); }))
-            return (repeated ? I2CResult::Fail_RepeatedStart : I2CResult::Fail_Start);
+            return (repeated ? Result::Fail_RepeatedStart : Result::Fail_Start);
 
-        return I2CResult::Success;
+        return Result::Success;
     }
 
     static ALWAYS_INLINE void generateStop()
@@ -113,7 +114,7 @@ struct I2C : public Peripheral<PERIPH, I2C_TypeDef>
 
     // ---
 
-    static ALWAYS_INLINE I2CResult sendAddress(I2CAddrMode mode, uint32_t address_7bit)
+    static ALWAYS_INLINE Result sendAddress(AddrMode mode, uint32_t address_7bit)
     {
         bool ack_fail = false;
 
@@ -128,13 +129,13 @@ struct I2C : public Peripheral<PERIPH, I2C_TypeDef>
                 return (ack_fail || LL_I2C_IsActiveFlag_ADDR(&CTRL_STRUCT()));
             }) ||
             ack_fail)
-            return ((mode == I2CAddrMode::RD) ? I2CResult::Fail_SendAddrRD : I2CResult::Fail_SendAddrWr);
+            return ((mode == AddrMode::RD) ? Result::Fail_SendAddrRD : Result::Fail_SendAddrWr);
 
         LL_I2C_ClearFlag_ADDR(&CTRL_STRUCT());
-        return I2CResult::Success;
+        return Result::Success;
     }
 
-    static ALWAYS_INLINE I2CResult sendData(uint32_t data)
+    static ALWAYS_INLINE Result sendData(uint32_t data)
     {
         bool ack_fail = false;
 
@@ -149,19 +150,19 @@ struct I2C : public Peripheral<PERIPH, I2C_TypeDef>
                 return (ack_fail || LL_I2C_IsActiveFlag_TXE(&CTRL_STRUCT()));
             }) ||
             ack_fail)
-            return I2CResult::Fail_TxData;
+            return Result::Fail_TxData;
 
-        return I2CResult::Success;
+        return Result::Success;
     }
 
     template<typename T>
-    static ALWAYS_INLINE I2CResult receiveData(T& data)
+    static ALWAYS_INLINE Result receiveData(T& data)
     {
         if (WAIT_FOR_FLAG([&]() -> bool { return LL_I2C_IsActiveFlag_RXNE(&CTRL_STRUCT()); }))
-            return I2CResult::Fail_RxData;
+            return Result::Fail_RxData;
 
         data = CTRL_STRUCT().DR;
-        return I2CResult::Success;
+        return Result::Success;
     }
 
   private:
@@ -173,109 +174,6 @@ struct I2C : public Peripheral<PERIPH, I2C_TypeDef>
     }
 };
 
-template<typename I2C_BUS>
-struct I2CDevice
-{
-    uint32_t deviceAddress;
-
-  public:
-    I2CDevice(uint32_t device_address)
-        : deviceAddress(device_address)
-    {}
-
-    I2CResult writeToMemAddress(uint16_t mem_addr, const uint8_t* p_data, uint8_t data_size)
-    {
-        I2CResult st;
-
-        while (true) {
-            // START and set internal memory address
-            if (!(st = startTransaction(deviceAddress, mem_addr)))
-                break;
-
-            // write data
-            while (data_size > 0) {
-                if (!(st = I2C_BUS::sendData(*p_data)))
-                    break;
-
-                p_data++;
-                data_size--;
-            }
-
-            break;
-        }
-
-        // generate STOP
-        I2C_BUS::generateStop();
-
-        return st;
-    }
-
-    I2CResult readFromMemAddress(uint16_t mem_addr, uint8_t* p_buffer, uint8_t read_size)
-    {
-        I2CResult st;
-
-        while (true) {
-            // START and set internal memory address
-            if (!(st = startTransaction(deviceAddress, mem_addr)))
-                break;
-
-            // generate Repeated START
-            if (!(st = I2C_BUS::generateStart(true)))
-                break;
-
-            // send device address
-            if (!(st = I2C_BUS::sendAddress(I2CAddrMode::RD, deviceAddress)))
-                break;
-
-            // set ACK to be send after each receive
-            if (read_size > 1)
-                I2C_BUS::nextDataACK();
-
-            // read data
-            while (read_size > 0) {
-                if (read_size == 1)
-                    I2C_BUS::nextDataNACK(); // end of reception
-
-                if (!(st = I2C_BUS::receiveData(*p_buffer)))
-                    break;
-
-                p_buffer++;
-                read_size--;
-            }
-
-            break;
-        }
-
-        // generate STOP
-        I2C_BUS::generateStop();
-
-        return st;
-    }
-
-  private:
-    static I2CResult startTransaction(uint32_t device_address, uint16_t mem_addr)
-    {
-        I2CResult st;
-
-        // generate START
-        if (!(st = I2C_BUS::generateStart()))
-            return st;
-
-        // send device address
-        if (!(st = I2C_BUS::sendAddress(I2CAddrMode::WR, device_address)))
-            return st;
-
-        // send memory address MSB
-        if (!(st = I2C_BUS::sendData((mem_addr >> 8) & 0xFF)))
-            return st;
-
-        // send memory address LSB
-        if (!(st = I2C_BUS::sendData(mem_addr & 0xFF)))
-            return st;
-
-        return st;
-    }
-};
-
+} // namespace I2c
 } // namespace Periph
 } // namespace VanillaCube

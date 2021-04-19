@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../math.h"
 #include "../periph/i2c.hpp"
 
 namespace VanillaCube {
@@ -22,6 +23,14 @@ class I2cSlave
         : deviceAddress(device_address)
         , internalAddressIs16Bit(internal_addr_16b)
     {}
+
+    bool ping(AddrMode mode = AddrMode::RD)
+    {
+        startTransaction(mode);
+        endTransaction();
+
+        return (st == Result::Success);
+    }
 
   protected:
     const Result& sendData(const uint8_t* p_data, uint8_t data_size)
@@ -96,17 +105,29 @@ class I2cSlave
 
         return st;
     }
+
+    const Result& waitUntilReadyForTransaction(uint32_t timeout_ticks, AddrMode mode)
+    {
+        st = Result::Success;
+
+        if (Timing::WAIT_FOR_FLAG([&]() -> bool { return ping(mode); }, timeout_ticks))
+            st = Result::Fail_DeviceIsBusy;
+
+        return st;
+    }
 };
 
 // --------------------------------------------------------------------------------------------------------------------
 
-template<typename I2C_BUS>
+template<typename I2C_BUS, size_t PAGE_SIZE = 64>
 struct I2cEEPROM : public I2cSlave<I2C_BUS>
 {
     using I2cSlave<I2C_BUS>::st;
     using I2cSlave<I2C_BUS>::startTransaction;
     using I2cSlave<I2C_BUS>::endTransaction;
     using AddrMode = Periph::I2c::AddrMode;
+
+    static constexpr uint32_t BURST_WRITE_TIMEOUT = 10; // systicks
 
   public:
     I2cEEPROM(uint32_t device_address)
@@ -144,6 +165,41 @@ struct I2cEEPROM : public I2cSlave<I2C_BUS>
         }
 
         endTransaction();
+        return st;
+    }
+
+    Result readBurst(size_t page_num, uint8_t* p_buffer, size_t read_size)
+    {
+        do {
+            const size_t n = Math::min(PAGE_SIZE, read_size);
+
+            if (!read(page_num * PAGE_SIZE, p_buffer, n))
+                break;
+
+            read_size -= n;
+            p_buffer += n;
+            page_num++;
+        } while (read_size > 0);
+
+        return st;
+    }
+
+    Result writeBurst(uint16_t page_num, const uint8_t* p_data, size_t data_size)
+    {
+        do {
+            const size_t n = Math::min(PAGE_SIZE, data_size);
+
+            if (!I2cSlave<I2C_BUS>::waitUntilReadyForTransaction(BURST_WRITE_TIMEOUT, AddrMode::WR))
+                break;
+
+            if (!write(page_num * PAGE_SIZE, p_data, n))
+                break;
+
+            data_size -= n;
+            p_data += n;
+            page_num++;
+        } while (data_size > 0);
+
         return st;
     }
 };

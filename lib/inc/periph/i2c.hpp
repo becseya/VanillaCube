@@ -34,6 +34,8 @@ enum class Result : int32_t
     Fail_SendAddrWr    = -5,
     Fail_TxData        = -6,
     Fail_RxData        = -7,
+    Fail_DeviceIsBusy  = -9,
+    Fail_DeviceBadAns  = -10,
 };
 
 bool operator!(const Result& result)

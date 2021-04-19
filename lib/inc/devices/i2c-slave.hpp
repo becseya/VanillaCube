@@ -14,13 +14,13 @@ class I2cSlave
     using AddrMode = Periph::I2c::AddrMode;
 
     const uint32_t deviceAddress;
-    const bool     externalAddressIs16Bit;
+    const bool     internalAddressIs16Bit;
     Result         st;
 
   public:
-    I2cSlave(uint32_t device_address, bool ext_addr_16)
+    I2cSlave(uint32_t device_address, bool internal_addr_16b)
         : deviceAddress(device_address)
-        , externalAddressIs16Bit(ext_addr_16)
+        , internalAddressIs16Bit(internal_addr_16b)
     {}
 
   protected:
@@ -59,24 +59,39 @@ class I2cSlave
         return st;
     }
 
-    const Result& startExternalTransaction(uint32_t device_addr, uint16_t external_addr)
+    // ---
+
+    void endTransaction()
+    {
+        I2C_BUS::generateStop();
+    }
+
+    const Result& startTransaction(AddrMode mode, bool repeated_start = false)
     {
         // generate START
-        if (!(st = I2C_BUS::generateStart()))
+        if (!(st = I2C_BUS::generateStart(repeated_start)))
             return st;
 
         // send device address
-        if (!(st = I2C_BUS::sendAddress(AddrMode::WR, device_addr)))
+        if (!(st = I2C_BUS::sendAddress(mode, deviceAddress)))
             return st;
 
-        if (externalAddressIs16Bit) {
+        return st;
+    }
+
+    const Result& startInternalTransaction(uint16_t internal_addr)
+    {
+        if (!startTransaction(AddrMode::WR))
+            return st;
+
+        if (internalAddressIs16Bit) {
             // send external address MSB
-            if (!(st = I2C_BUS::sendData((external_addr >> 8) & 0xFF)))
+            if (!(st = I2C_BUS::sendData((internal_addr >> 8) & 0xFF)))
                 return st;
         }
 
         // send external address LSB
-        if (!(st = I2C_BUS::sendData(external_addr & 0xFF)))
+        if (!(st = I2C_BUS::sendData(internal_addr & 0xFF)))
             return st;
 
         return st;
@@ -89,7 +104,8 @@ template<typename I2C_BUS>
 struct I2cEEPROM : public I2cSlave<I2C_BUS>
 {
     using I2cSlave<I2C_BUS>::st;
-    using I2cSlave<I2C_BUS>::deviceAddress;
+    using I2cSlave<I2C_BUS>::startTransaction;
+    using I2cSlave<I2C_BUS>::endTransaction;
     using AddrMode = Periph::I2c::AddrMode;
 
   public:
@@ -97,45 +113,37 @@ struct I2cEEPROM : public I2cSlave<I2C_BUS>
         : I2cSlave<I2C_BUS>(device_address, true)
     {}
 
-    Result write(uint16_t mem_addr, const uint8_t* p_data, uint8_t data_size)
+    Result write(uint16_t mem_addr, const uint8_t* p_data, size_t data_size)
     {
         while (true) {
             // START and set internal memory address
-            if (!I2cSlave<I2C_BUS>::startExternalTransaction(deviceAddress, mem_addr))
+            if (!I2cSlave<I2C_BUS>::startInternalTransaction(mem_addr))
                 break;
 
             I2cSlave<I2C_BUS>::sendData(p_data, data_size);
             break;
         }
 
-        // generate STOP
-        I2C_BUS::generateStop();
-
+        endTransaction();
         return st;
     }
 
-    Result read(uint16_t mem_addr, uint8_t* p_buffer, uint8_t read_size)
+    Result read(uint16_t mem_addr, uint8_t* p_buffer, size_t read_size)
     {
         while (true) {
             // START and set internal memory address
-            if (!(st = I2cSlave<I2C_BUS>::startExternalTransaction(deviceAddress, mem_addr)))
+            if (!I2cSlave<I2C_BUS>::startInternalTransaction(mem_addr))
                 break;
 
             // generate Repeated START
-            if (!(st = I2C_BUS::generateStart(true)))
-                break;
-
-            // send device address
-            if (!(st = I2C_BUS::sendAddress(AddrMode::RD, deviceAddress)))
+            if (!startTransaction(AddrMode::RD, true))
                 break;
 
             I2cSlave<I2C_BUS>::recvData(p_buffer, read_size);
             break;
         }
 
-        // generate STOP
-        I2C_BUS::generateStop();
-
+        endTransaction();
         return st;
     }
 };

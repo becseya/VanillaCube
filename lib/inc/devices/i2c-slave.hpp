@@ -156,7 +156,7 @@ class I2cSlave
     {
         st = Result::Success;
 
-        if (Timing::WAIT_FOR_FLAG([&]() -> bool { return ping(mode); }, timeout_ticks))
+        if (!Timing::WAIT_FOR_FLAG([&]() -> bool { return ping(mode); }, timeout_ticks))
             st = Result::Fail_DeviceIsBusy;
 
         return st;

@@ -84,7 +84,7 @@ struct Bus : public Peripheral<PERIPH, I2C_TypeDef>
     {
         if (!repeated) {
             // wait until busy flag is cleared
-            if (WAIT_FOR_FLAG([&]() -> bool { return !LL_I2C_IsActiveFlag_BUSY(&CTRL_STRUCT()); }))
+            if (!WAIT_FOR_FLAG([&]() -> bool { return !LL_I2C_IsActiveFlag_BUSY(&CTRL_STRUCT()); }))
                 return Result::Fail_BusIsBusy;
 
             // disable POS (master mode)
@@ -93,7 +93,7 @@ struct Bus : public Peripheral<PERIPH, I2C_TypeDef>
 
         // generate START
         LL_I2C_GenerateStartCondition(&CTRL_STRUCT());
-        if (WAIT_FOR_FLAG([&]() -> bool { return LL_I2C_IsActiveFlag_SB(&CTRL_STRUCT()); }))
+        if (!WAIT_FOR_FLAG([&]() -> bool { return LL_I2C_IsActiveFlag_SB(&CTRL_STRUCT()); }))
             return (repeated ? Result::Fail_RepeatedStart : Result::Fail_Start);
 
         return Result::Success;
@@ -123,7 +123,7 @@ struct Bus : public Peripheral<PERIPH, I2C_TypeDef>
         // send device address
         CTRL_STRUCT().DR = ((address_7bit << 1) | Util::ENUM_TO_UINT(mode));
 
-        if (WAIT_FOR_FLAG([&]() -> bool {
+        if (!WAIT_FOR_FLAG([&]() -> bool {
                 if (LL_I2C_IsActiveFlag_AF(&CTRL_STRUCT())) { // ACK Failure
                     LL_I2C_ClearFlag_AF(&CTRL_STRUCT());
                     ack_fail = true;
@@ -144,7 +144,7 @@ struct Bus : public Peripheral<PERIPH, I2C_TypeDef>
         // send data
         CTRL_STRUCT().DR = data;
 
-        if (WAIT_FOR_FLAG([&]() -> bool {
+        if (!WAIT_FOR_FLAG([&]() -> bool {
                 if (LL_I2C_IsActiveFlag_AF(&CTRL_STRUCT())) { // ACK Failure
                     LL_I2C_ClearFlag_AF(&CTRL_STRUCT());
                     ack_fail = true;
@@ -160,7 +160,7 @@ struct Bus : public Peripheral<PERIPH, I2C_TypeDef>
     template<typename T>
     static ALWAYS_INLINE Result receiveData(T& data)
     {
-        if (WAIT_FOR_FLAG([&]() -> bool { return LL_I2C_IsActiveFlag_RXNE(&CTRL_STRUCT()); }))
+        if (!WAIT_FOR_FLAG([&]() -> bool { return LL_I2C_IsActiveFlag_RXNE(&CTRL_STRUCT()); }))
             return Result::Fail_RxData;
 
         data = CTRL_STRUCT().DR;

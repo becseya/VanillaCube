@@ -31,14 +31,15 @@ class Canvas
     Canvas(Bitmap& bitmap);
     Canvas(const Canvas& c, Point p0, uint_t width, uint_t height);
 
-    uint_t getWidth();
-    uint_t getHeight();
+    uint_t      getWidth() const;
+    uint_t      getHeight() const;
+    const Font& getFont() const;
 
     void clear();
     void setMixing(Mixing mixing);
     void setFont(const Font& font);
 
-    int16_t write(const char* str, Point p0, Alignment alignment = Alignment::TopLeft);
+    int_t write(const char* str, Point p0, Alignment alignment = Alignment::TopLeft);
 
     void drawLine(const Point& p0, const Point& p1);
     void drawCircle(Point p0, float r);

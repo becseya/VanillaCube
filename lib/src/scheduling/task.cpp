@@ -6,6 +6,19 @@ using namespace VanillaCube::Scheduling;
 
 // --------------------------------------------------------------------------------------------------------------------
 
+float TaskInfo::getAverageRuntime() const
+{
+    return (float)runTime / runCntr;
+}
+
+void TaskInfo::updateLoad(counter_t passed_since_last_update)
+{
+    load = (float)(runTime - lastRunTime) /passed_since_last_update,
+    lastRunTime = runTime;
+}
+
+// --------------------------------------------------------------------------------------------------------------------
+
 Task::Task(const char* name, unsigned priority, loop_function_t loop_function)
     : fLoop(loop_function)
     , priority(priority)
@@ -17,7 +30,7 @@ unsigned Task::getPriority() const
     return priority;
 }
 
-const Task::info_t& Task::getInfo() const
+const TaskInfo& Task::getInfo() const
 {
     return info;
 }
@@ -34,4 +47,9 @@ void Task::execute()
 bool Task::isHigherPriority(const Task& other) const
 {
     return (priority < other.priority);
+}
+
+void Task::updateLoad(TaskInfo::counter_t passed_since_last_update)
+{
+    info.updateLoad(passed_since_last_update);
 }

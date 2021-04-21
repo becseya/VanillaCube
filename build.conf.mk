@@ -6,17 +6,17 @@
 #
 
 ifndef BUILD_CONFIG
-BUILD_CONFIG = 0
+BUILD_CONFIG = 1
 endif
 
 ifeq (${BUILD_CONFIG}, 0)
-BUILD_CONFIG_TXT = debug
-OPT              = -Og
-C_FLAGS          = -g -gdwarf-2
-else ifeq (${BUILD_CONFIG}, 1)
 BUILD_CONFIG_TXT = release
 OPT              = -O3
 C_FLAGS          = -DNDEBUG
+else ifeq (${BUILD_CONFIG}, 1)
+BUILD_CONFIG_TXT = debug
+OPT              = -Og
+C_FLAGS          = -g -gdwarf-2
 else
 $(error Unknown build config')
 endif
@@ -40,8 +40,8 @@ CONFIG_SHORTCUTS = debug release
 .PHONY: ${CONFIG_SHORTCUTS}
 .SILENT: ${CONFIG_SHORTCUTS}
 
-debug:
+release:
 	@make BUILD_CONFIG=0
 
-release:
+debug:
 	@make BUILD_CONFIG=1

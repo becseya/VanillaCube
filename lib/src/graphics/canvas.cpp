@@ -24,14 +24,19 @@ Canvas::Canvas(const Canvas& c, Point p0, uint_t width, uint_t height)
     , o(p0)
 {}
 
-uint_t Canvas::getWidth()
+uint_t Canvas::getWidth() const
 {
     return width;
 }
 
-uint_t Canvas::getHeight()
+uint_t Canvas::getHeight() const
 {
     return height;
+}
+
+const Font& Canvas::getFont() const
+{
+    return *font;
 }
 
 void Canvas::setMixing(Mixing mixing)
@@ -56,7 +61,7 @@ void Canvas::clear()
 
 // --------------------------------------------------------------------------------------------------------------------
 
-int16_t Canvas::write(const char* str, Point p, Alignment alignment)
+int_t Canvas::write(const char* str, Point p, Alignment alignment)
 {
     if (!font)
         return 0;
@@ -121,10 +126,11 @@ void Canvas::drawCircle(Point p0, float r)
 
 void Canvas::drawImage(Point p0, const Bitmap& img, Alignment alignment)
 {
+    p0.align(alignment, img.getWidth(), img.getHeight());
+
     const int_t x_max = Math::min<int_t>(img.getWidth() - 1, width - p0.x);
     const int_t y_max = Math::min<int_t>(img.getHeight() - 1, height - p0.y);
 
-    p0.align(alignment, img.getWidth(), img.getHeight());
     p0 += o;
 
     for (int16_t x = 0; x <= x_max; x++) {

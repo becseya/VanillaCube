@@ -10,9 +10,19 @@ Scheduler::Scheduler(const tasks_t& tasks)
     : tasks(tasks)
 {}
 
-float Scheduler::getCpuLoad()
+float Scheduler::getCpuLoad() const
 {
     return cpuLoad;
+}
+
+size_t Scheduler::getNumberOfTasks() const
+{
+    return tasks.size();
+}
+
+const TaskInfo& Scheduler::getTaskInfo(size_t idx) const
+{
+    return tasks[idx]->getInfo();
 }
 
 void Scheduler::iterate()
@@ -35,8 +45,11 @@ void Scheduler::updateCpuLoad()
     if (d_tick > LOAD_CHECK_TICKS) {
         uint64_t runtime_sum = 0;
 
-        for (size_t i = 0; i < tasks.size; i++)
+        for (size_t i = 0; i < tasks.size(); i++)
+        {
+            tasks[i]->updateLoad(static_cast<TaskInfo::counter_t>(d_tick));
             runtime_sum += tasks[i]->getInfo().runTime;
+        }
 
         cpuLoad         = (float)(runtime_sum - last_sum) / d_tick;
         last_load_check = Timing::getSysick();

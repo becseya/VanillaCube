@@ -9,6 +9,7 @@ using namespace VanillaCube::Graphics;
 Canvas::Canvas(Bitmap& bitmap)
     : bitmap(bitmap)
     , mixing(Mixing::Add)
+    , digitSpacing(0)
     , font(nullptr)
     , width(bitmap.getWidth())
     , height(bitmap.getHeight())
@@ -18,6 +19,7 @@ Canvas::Canvas(Bitmap& bitmap)
 Canvas::Canvas(const Canvas& c, Point p0, uint_t width, uint_t height)
     : bitmap(c.bitmap)
     , mixing(c.mixing)
+    , digitSpacing(0)
     , font(c.font)
     , width(width)
     , height(height)
@@ -42,6 +44,16 @@ const Font& Canvas::getFont() const
 void Canvas::setMixing(Mixing mixing)
 {
     Canvas::mixing = mixing;
+}
+
+void Canvas::setFixedDigitSpacing(uint_t val)
+{
+    digitSpacing = val;
+}
+
+void Canvas::clearFixedDigitSpacing()
+{
+    digitSpacing = 0;
 }
 
 void Canvas::setFont(const Font& font)
@@ -77,7 +89,12 @@ int_t Canvas::write(const char* str, Point p, Alignment alignment)
 
             if (img.getWidth() > 0) {
                 drawImage(p, img);
-                p.x += (img.getWidth() + font->getParams().hSpace);
+
+                uint_t proposed_width = img.getWidth();
+                if (digitSpacing && ('0' <= *str) && (*str <= '9'))
+                    proposed_width = digitSpacing;
+
+                p.x += (proposed_width + font->getParams().hSpace);
             }
         }
         str++;

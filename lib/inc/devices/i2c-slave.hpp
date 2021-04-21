@@ -11,18 +11,25 @@ using Periph::I2c::Result;
 template<typename I2C_BUS>
 class I2cSlave
 {
-  protected:
     using AddrMode = Periph::I2c::AddrMode;
 
     const uint32_t deviceAddress;
     const bool     internalAddressIs16Bit;
-    Result         st;
+
+  protected:
+    Result st;
 
   public:
     I2cSlave(uint32_t device_address, bool internal_addr_16b)
         : deviceAddress(device_address)
         , internalAddressIs16Bit(internal_addr_16b)
+        , st(Result::Success)
     {}
+
+    const Result& getLastResult()
+    {
+        return st;
+    }
 
     bool ping(AddrMode mode = AddrMode::RD)
     {
@@ -30,6 +37,45 @@ class I2cSlave
         endTransaction();
 
         return (st == Result::Success);
+    }
+
+    const Result& writeSingleRegister(uint16_t internal_addr, uint8_t value)
+    {
+        return write(internal_addr, &value, 1);
+    }
+
+    const Result& write(uint16_t internal_addr, const uint8_t* p_data, size_t data_size)
+    {
+        while (true) {
+            // START and set internal memory address
+            if (!startInternalTransaction(internal_addr))
+                break;
+
+            sendData(p_data, data_size);
+            break;
+        }
+
+        endTransaction();
+        return st;
+    }
+
+    const Result& read(uint16_t internal_addr, uint8_t* p_buffer, size_t read_size)
+    {
+        while (true) {
+            // START and set internal memory address
+            if (!startInternalTransaction(internal_addr))
+                break;
+
+            // generate Repeated START
+            if (!startTransaction(AddrMode::RD, true))
+                break;
+
+            recvData(p_buffer, read_size);
+            break;
+        }
+
+        endTransaction();
+        return st;
     }
 
   protected:
@@ -123,8 +169,9 @@ template<typename I2C_BUS, size_t PAGE_SIZE = 64>
 struct I2cEEPROM : public I2cSlave<I2C_BUS>
 {
     using I2cSlave<I2C_BUS>::st;
-    using I2cSlave<I2C_BUS>::startTransaction;
-    using I2cSlave<I2C_BUS>::endTransaction;
+    using I2cSlave<I2C_BUS>::read;
+    using I2cSlave<I2C_BUS>::write;
+    using I2cSlave<I2C_BUS>::waitUntilReadyForTransaction;
     using AddrMode = Periph::I2c::AddrMode;
 
     static constexpr uint32_t BURST_WRITE_TIMEOUT = 10; // systicks
@@ -133,40 +180,6 @@ struct I2cEEPROM : public I2cSlave<I2C_BUS>
     I2cEEPROM(uint32_t device_address)
         : I2cSlave<I2C_BUS>(device_address, true)
     {}
-
-    Result write(uint16_t mem_addr, const uint8_t* p_data, size_t data_size)
-    {
-        while (true) {
-            // START and set internal memory address
-            if (!I2cSlave<I2C_BUS>::startInternalTransaction(mem_addr))
-                break;
-
-            I2cSlave<I2C_BUS>::sendData(p_data, data_size);
-            break;
-        }
-
-        endTransaction();
-        return st;
-    }
-
-    Result read(uint16_t mem_addr, uint8_t* p_buffer, size_t read_size)
-    {
-        while (true) {
-            // START and set internal memory address
-            if (!I2cSlave<I2C_BUS>::startInternalTransaction(mem_addr))
-                break;
-
-            // generate Repeated START
-            if (!startTransaction(AddrMode::RD, true))
-                break;
-
-            I2cSlave<I2C_BUS>::recvData(p_buffer, read_size);
-            break;
-        }
-
-        endTransaction();
-        return st;
-    }
 
     Result readBurst(size_t page_num, uint8_t* p_buffer, size_t read_size)
     {
@@ -189,7 +202,7 @@ struct I2cEEPROM : public I2cSlave<I2C_BUS>
         do {
             const size_t n = Math::min(PAGE_SIZE, data_size);
 
-            if (!I2cSlave<I2C_BUS>::waitUntilReadyForTransaction(BURST_WRITE_TIMEOUT, AddrMode::WR))
+            if (!waitUntilReadyForTransaction(BURST_WRITE_TIMEOUT, AddrMode::WR))
                 break;
 
             if (!write(page_num * PAGE_SIZE, p_data, n))

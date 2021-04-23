@@ -73,5 +73,59 @@ struct Vector2D
     }
 };
 
+template<typename T>
+struct vector_3d_t
+{
+    T x;
+    T y;
+    T z;
+};
+
+template<typename T>
+struct Vector3D : public vector_3d_t<T>
+{
+    using vector_3d_t<T>::x;
+    using vector_3d_t<T>::y;
+    using vector_3d_t<T>::z;
+
+    Vector3D(const vector_3d_t<T>& other)
+        : vector_3d_t<T>(other)
+    {}
+
+    Vector3D(T x, T y, T z)
+    {
+        vector_3d_t<T>::x = x;
+        vector_3d_t<T>::y = y;
+        vector_3d_t<T>::z = z;
+    }
+
+    bool operator==(const Vector3D& other) const
+    {
+        return ((x == other.x) && (y == other.y) && (z == other.z));
+    }
+
+    Vector3D operator+(const Vector3D& other) const
+    {
+        return { static_cast<T>(x + other.x), static_cast<T>(y + other.y), static_cast<T>(z + other.z) };
+    }
+
+    T abs()
+    {
+        return sqrt(x * x + y * y + z * z);
+    }
+
+    Vector3D normalize()
+    {
+        T r = abs();
+        return { static_cast<T>(x / r), static_cast<T>(y / r), static_cast<T>(z / r) };
+    }
+
+    Vector3D& operator+=(const Vector3D& other)
+    {
+        *this = operator+(other);
+        return *this;
+    }
+};
+
 } // namespace Math
 } // namespace VanillaCube

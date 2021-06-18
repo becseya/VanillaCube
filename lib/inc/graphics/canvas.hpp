@@ -21,6 +21,7 @@ class Canvas
 {
     Bitmap&     bitmap;
     Mixing      mixing;
+    uint_t      digitSpacing;
     const Font* font;
 
     uint_t width;
@@ -38,6 +39,8 @@ class Canvas
     void clear();
     void setMixing(Mixing mixing);
     void setFont(const Font& font);
+    void setFixedDigitSpacing(uint_t val);
+    void clearFixedDigitSpacing();
 
     int_t write(const char* str, Point p0, Alignment alignment = Alignment::TopLeft);
 

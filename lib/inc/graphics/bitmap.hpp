@@ -30,10 +30,12 @@ class Bitmap
 };
 
 template<uint_t WIDTH, uint_t HEIGHT>
-class BitMapAllocator : public Bitmap
+struct BitMapAllocator : public Bitmap
 {
+    static constexpr size_t BUFFER_SIZE = HEIGHT * Math::ceilDiv(WIDTH, 8);
+
   protected:
-    uint8_t buffer[((HEIGHT + 7) / 8) * WIDTH];
+    uint8_t buffer[BUFFER_SIZE];
 
   public:
     BitMapAllocator()

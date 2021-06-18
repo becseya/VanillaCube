@@ -9,7 +9,7 @@ namespace VanillaCube {
 namespace Math {
 
 template<typename T>
-ALWAYS_INLINE T min(const T& a, const T& b)
+ALWAYS_INLINE constexpr T min(const T& a, const T& b)
 {
     static_assert(std::is_arithmetic<T>::value, "Type must be numberic");
 
@@ -17,7 +17,7 @@ ALWAYS_INLINE T min(const T& a, const T& b)
 }
 
 template<typename T>
-ALWAYS_INLINE T max(const T& a, const T& b)
+ALWAYS_INLINE constexpr T max(const T& a, const T& b)
 {
     static_assert(std::is_arithmetic<T>::value, "Type must be numberic");
 
@@ -25,7 +25,7 @@ ALWAYS_INLINE T max(const T& a, const T& b)
 }
 
 template<typename T>
-ALWAYS_INLINE T abs(const T& a)
+ALWAYS_INLINE constexpr T abs(const T& a)
 {
     static_assert(std::is_arithmetic<T>::value, "Type must be numberic");
 
@@ -36,7 +36,7 @@ ALWAYS_INLINE T abs(const T& a)
 }
 
 template<typename T, typename T2>
-ALWAYS_INLINE T ceilDiv(const T& divident, const T2& n)
+ALWAYS_INLINE constexpr T ceilDiv(const T& divident, const T2& n)
 {
     static_assert(std::is_integral<T>::value && std::is_integral<T2>::value, "Type must be integer");
 
